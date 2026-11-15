@@ -1,0 +1,223 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="color-scheme" content="light">
+  <title>AlgebraicBoolean · Archived C# programs and BLB rules</title>
+  <style>
+    :root { --paper: #fcfbf7; --panel: #edf3ed; --ink: #202a27; --muted: #495b54; --green: #23554a; --deep: #183c35; --rule: #cbd8cf; }
+    * { box-sizing: border-box; }
+    body { margin: 0; background: var(--paper); color: var(--ink); font: 1.05rem/1.62 system-ui, sans-serif; }
+    .wrap { width: min(58rem, calc(100% - 3rem)); margin-inline: auto; }
+    header { padding: 2.65rem 0 1.65rem; color: var(--paper); background: var(--deep); border-top: .36rem solid #c3d2a4; }
+    .kicker { color: #dce8d6; font-size: .77rem; font-weight: 700; text-transform: uppercase; letter-spacing: .09em; margin: 0 0 .5rem; }
+    h1, h2 { font-family: Georgia, serif; font-weight: 500; line-height: 1.15; }
+    h1 { margin: 0 0 .6rem; font-size: clamp(2.25rem, 6vw, 3.6rem); }
+    h2 { margin: 0 0 .75rem; font-size: clamp(1.7rem, 4vw, 2.25rem); }
+    h3 { margin: 1.25rem 0 .5rem; font-size: 1.14rem; }
+    p { margin: 0 0 .85rem; max-width: 76ch; }
+    header p:last-child { margin-bottom: 0; color: #e5eee7; }
+    nav { padding: .8rem 0; background: var(--panel); border-bottom: 1px solid var(--rule); }
+    nav .wrap { display: flex; flex-wrap: wrap; gap: .4rem 1.3rem; }
+    a { color: var(--green); text-underline-offset: .16em; }
+    a:focus-visible { outline: 2px solid var(--green); outline-offset: .18rem; }
+    section { margin: 2.1rem 0; scroll-margin-top: 1rem; }
+    section + section { border-top: 1px solid var(--rule); padding-top: 1.6rem; }
+    .table-scroll { margin: 1rem 0 1.15rem; overflow-x: auto; }
+    table { width: 100%; border-collapse: collapse; text-align: left; font-size: .93rem; }
+    caption { text-align: left; padding-bottom: .35rem; color: var(--muted); font-weight: 650; }
+    th, td { padding: .42rem .55rem; border-bottom: 1px solid var(--rule); vertical-align: top; }
+    thead th { background: var(--panel); color: var(--deep); }
+    .numbers td, .products td { text-align: center; }
+    .numbers th, .products th { min-width: 3.4rem; }
+    math { font-family: "Cambria Math", "STIX Two Math", "Latin Modern Math", math; }
+    .equation { overflow-x: auto; margin: .8rem 0 1rem; padding: .6rem; background: var(--panel); border-left: .2rem solid var(--green); }
+    code { font: .91em/1.5 ui-monospace, Consolas, monospace; overflow-wrap: anywhere; }
+    footer { padding: 1rem 0; border-top: 1px solid var(--rule); color: var(--muted); font-size: .87rem; }
+    @media (max-width: 35rem) {
+      .wrap { width: calc(100% - 2rem); }
+      header { padding: 1.8rem 0 1.25rem; }
+      section { margin: 1.6rem 0; }
+    }
+    @media print {
+      body, header, .equation { background: white; color: black; }
+      header .kicker, header p:last-child { color: black; }
+      .wrap { width: 100%; }
+      nav { display: none; }
+      h2, h3, caption { break-after: avoid; }
+      tr, .equation { break-inside: avoid; }
+    }
+  </style>
+</head>
+<body>
+  <header>
+    <div class="wrap">
+      <p class="kicker">AlgebraicBoolean · Historical supplement</p>
+      <h1>LinearBoolean3 and BLB</h1>
+      <p>The mixed literal representation, its complete rule set, and what the archived compression experiments can tell us.</p>
+    </div>
+  </header>
+  <nav aria-label="Contents"><div class="wrap">
+    <a href="#notation">Two-bit notation</a>
+    <a href="#products">Multiplication</a>
+    <a href="#compaction">Compaction rules</a>
+    <a href="#expansion">Expansion and limits</a>
+    <a href="#measurements">Compression results</a>
+    <a href="#programs">The two projects</a>
+    <a href="#verification">Verification</a>
+  </div></nav>
+  <main class="wrap">
+
+<section id="notation" aria-labelledby="notation-title">
+  <h2 id="notation-title">The two-bit term format</h2>
+  <p>BLB keeps the usual 0/1 encoding at its inputs and outputs. Inside a stored term, a variable can be absent, positive, negated, or signed. Each term has a separate integer coefficient. In the tables below, <var>A</var> is the arithmetic value 0 or 1 of the input, and <var>X</var> abbreviates the archive’s <code>xA</code>.</p>
+  <div class="table-scroll"><table>
+    <caption>Factor encodings in <code>EBUnKnownBitMap</code></caption>
+    <thead><tr><th scope="col">Positive bit</th><th scope="col">Negative bit</th><th scope="col">Archive notation</th><th scope="col">Factor</th><th scope="col">At A = 0</th><th scope="col">At A = 1</th></tr></thead>
+    <tbody>
+      <tr><td>0</td><td>0</td><th scope="row">Absent</th><td><math xmlns="http://www.w3.org/1998/Math/MathML"><mn>1</mn></math></td><td>1</td><td>1</td></tr>
+      <tr><td>1</td><td>0</td><th scope="row"><code>A</code></th><td><math xmlns="http://www.w3.org/1998/Math/MathML"><mi>A</mi></math></td><td>0</td><td>1</td></tr>
+      <tr><td>0</td><td>1</td><th scope="row"><code>!A</code></th><td><math xmlns="http://www.w3.org/1998/Math/MathML"><mn>1</mn><mo>−</mo><mi>A</mi></math></td><td>1</td><td>0</td></tr>
+      <tr><td>1</td><td>1</td><th scope="row"><code>xA</code></th><td><math xmlns="http://www.w3.org/1998/Math/MathML"><mi>X</mi><mo>=</mo><mi>A</mi><mo>−</mo><mo>¬</mo><mi>A</mi><mo>=</mo><mn>2</mn><mi>A</mi><mo>−</mo><mn>1</mn></math></td><td>−1</td><td>1</td></tr>
+    </tbody>
+  </table></div>
+  <p>The sign of <var>X</var> depends on the input. A stored term is zero if any ordinary literal is false. Otherwise its value is the coefficient times the product of the signed factors. Two terms with the same masks are collected by adding their coefficients and dropping any zero coefficient.</p>
+  <p>For example, <code>A!B!C</code> retains <math xmlns="http://www.w3.org/1998/Math/MathML"><mrow><mi>A</mi><mo>⁢</mo><mrow><mo>(</mo><mn>1</mn><mo>−</mo><mi>B</mi><mo>)</mo></mrow><mo>⁢</mo><mrow><mo>(</mo><mn>1</mn><mo>−</mo><mi>C</mi><mo>)</mo></mrow></mrow></math> as one term. That is a count in this factored representation. Expanding into the article’s ordinary monomials gives <math xmlns="http://www.w3.org/1998/Math/MathML"><mi>A</mi><mo>−</mo><mrow><mi>A</mi><mo>⁢</mo><mi>B</mi></mrow><mo>−</mo><mrow><mi>A</mi><mo>⁢</mo><mi>C</mi></mrow><mo>+</mo><mrow><mi>A</mi><mo>⁢</mo><mi>B</mi><mo>⁢</mo><mi>C</mi></mrow></math>.</p>
+</section>
+
+<section id="products" aria-labelledby="products-title">
+  <h2 id="products-title">Complete multiplication table</h2>
+  <p>The entries below give the product of two factors for the same variable. The two columns of factor values above verify the whole table by pointwise multiplication. In the code, an absent factor has mask <code>00</code> and value 1. A zero product discards the entire term pair.</p>
+  <div class="table-scroll"><table class="products">
+    <caption>All ordered cases from <code>CombineMultiply</code></caption>
+    <thead><tr><th scope="col">×</th><th scope="col">1</th><th scope="col">A</th><th scope="col">¬A</th><th scope="col">X</th></tr></thead>
+    <tbody>
+      <tr><th scope="row">1</th><td>1</td><td>A</td><td>¬A</td><td>X</td></tr>
+      <tr><th scope="row">A</th><td>A</td><td>A</td><td>0</td><td>A</td></tr>
+      <tr><th scope="row">¬A</th><td>¬A</td><td>0</td><td>¬A</td><td>−¬A</td></tr>
+      <tr><th scope="row">X</th><td>X</td><td>A</td><td>−¬A</td><td>1</td></tr>
+    </tbody>
+  </table></div>
+  <p>For a product of two whole terms, apply the table independently at every input position. Each <math xmlns="http://www.w3.org/1998/Math/MathML"><mrow><mrow><mo>¬</mo><mi>A</mi></mrow><mo>⁢</mo><mi>X</mi></mrow></math> case contributes a factor of −1, so an odd number of such positions reverses the coefficient sign. Different variables retain their respective factors. <code>EBHashDictionary</code> then combines equal output masks.</p>
+  <p>The enclosing signal formulas stay in the original 0/1 system. For signals <var>p</var> and <var>q</var>, the code uses <math xmlns="http://www.w3.org/1998/Math/MathML"><mn>1</mn><mo>−</mo><mi>p</mi></math>, <math xmlns="http://www.w3.org/1998/Math/MathML"><mrow><mi>p</mi><mo>⁢</mo><mi>q</mi></mrow></math>, <math xmlns="http://www.w3.org/1998/Math/MathML"><mi>p</mi><mo>+</mo><mi>q</mi><mo>−</mo><mrow><mi>p</mi><mo>⁢</mo><mi>q</mi></mrow></math>, and <math xmlns="http://www.w3.org/1998/Math/MathML"><mi>p</mi><mo>+</mo><mi>q</mi><mo>−</mo><mrow><mn>2</mn><mo>⁢</mo><mi>p</mi><mo>⁢</mo><mi>q</mi></mrow></math> for NOT, AND, OR, and XOR respectively.</p>
+</section>
+
+<section id="compaction" aria-labelledby="compaction-title">
+  <h2 id="compaction-title">All four families of compaction rules</h2>
+  <p>Write <var>R</var> for the common product of factors other than <var>A</var>. In the comments it is usually <code>BCD</code>. Thus <code>!ABCD</code> means <math xmlns="http://www.w3.org/1998/Math/MathML"><mrow><mrow><mo>¬</mo><mi>A</mi></mrow><mo>⁢</mo><mi>R</mi></mrow></math> and <code>xABCD</code> means <math xmlns="http://www.w3.org/1998/Math/MathML"><mrow><mi>X</mi><mo>⁢</mo><mi>R</mi></mrow></math>. Each identity follows by factoring out <var>R</var> and substituting <math xmlns="http://www.w3.org/1998/Math/MathML"><mo>¬</mo><mi>A</mi><mo>=</mo><mn>1</mn><mo>−</mo><mi>A</mi></math> and <math xmlns="http://www.w3.org/1998/Math/MathML"><mi>X</mi><mo>=</mo><mn>2</mn><mi>A</mi><mo>−</mo><mn>1</mn></math>.</p>
+  <div class="table-scroll"><table>
+    <caption>Rules in <code>EBBase.cs</code>, with corrected results where needed</caption>
+    <thead><tr><th scope="col">Rule</th><th scope="col">Input</th><th scope="col">Correct result</th><th scope="col">Status in the archived implementation</th></tr></thead>
+    <tbody>
+<tr><th scope="row">1</th><td><math xmlns="http://www.w3.org/1998/Math/MathML"><mrow><mrow><mrow><mo>¬</mo><mi>A</mi></mrow><mo>⁢</mo><mi>R</mi></mrow><mo>+</mo><mrow><mi>A</mi><mo>⁢</mo><mi>R</mi></mrow></mrow></math></td><td><math xmlns="http://www.w3.org/1998/Math/MathML"><mi>R</mi></math></td><td><strong>Implemented</strong><br>Complementary literals cancel out of the product.</td></tr>
+<tr><th scope="row">1</th><td><math xmlns="http://www.w3.org/1998/Math/MathML"><mrow><mrow><mi>A</mi><mo>⁢</mo><mi>R</mi></mrow><mo>+</mo><mrow><mrow><mo>¬</mo><mi>A</mi></mrow><mo>⁢</mo><mi>R</mi></mrow></mrow></math></td><td><math xmlns="http://www.w3.org/1998/Math/MathML"><mi>R</mi></math></td><td><strong>Implemented</strong><br>The same rule in the other input order.</td></tr>
+<tr><th scope="row">1</th><td><math xmlns="http://www.w3.org/1998/Math/MathML"><mrow><mrow><mi>A</mi><mo>⁢</mo><mi>R</mi></mrow><mo>+</mo><mrow><mi>X</mi><mo>⁢</mo><mi>R</mi></mrow></mrow></math></td><td><math xmlns="http://www.w3.org/1998/Math/MathML"><mrow><mrow><mn>3</mn><mo>⁢</mo><mrow><mi>A</mi><mo>⁢</mo><mi>R</mi></mrow></mrow><mo>−</mo><mi>R</mi></mrow></math></td><td><strong>Comment only</strong><br>The comment is correct. The code declines this pair.</td></tr>
+<tr><th scope="row">1</th><td><math xmlns="http://www.w3.org/1998/Math/MathML"><mrow><mrow><mrow><mo>¬</mo><mi>A</mi></mrow><mo>⁢</mo><mi>R</mi></mrow><mo>+</mo><mrow><mi>X</mi><mo>⁢</mo><mi>R</mi></mrow></mrow></math></td><td><math xmlns="http://www.w3.org/1998/Math/MathML"><mrow><mi>A</mi><mo>⁢</mo><mi>R</mi></mrow></math></td><td><strong>Implemented</strong><br>The signed factor and the negated literal add to A.</td></tr>
+<tr><th scope="row">2</th><td><math xmlns="http://www.w3.org/1998/Math/MathML"><mrow><mrow><mi>A</mi><mo>⁢</mo><mi>R</mi></mrow><mo>−</mo><mi>R</mi></mrow></math></td><td><math xmlns="http://www.w3.org/1998/Math/MathML"><mrow><mo>−</mo><mrow><mrow><mo>¬</mo><mi>A</mi></mrow><mo>⁢</mo><mi>R</mi></mrow></mrow></math></td><td><strong>Implemented</strong><br>Subtracting the shorter term leaves the negative of the complementary literal.</td></tr>
+<tr><th scope="row">2</th><td><math xmlns="http://www.w3.org/1998/Math/MathML"><mrow><mi>R</mi><mo>−</mo><mrow><mi>A</mi><mo>⁢</mo><mi>R</mi></mrow></mrow></math></td><td><math xmlns="http://www.w3.org/1998/Math/MathML"><mrow><mrow><mo>¬</mo><mi>A</mi></mrow><mo>⁢</mo><mi>R</mi></mrow></math></td><td><strong>Implemented</strong><br>The same identity with signs reversed.</td></tr>
+<tr><th scope="row">2</th><td><math xmlns="http://www.w3.org/1998/Math/MathML"><mrow><mi>R</mi><mo>−</mo><mrow><mrow><mo>¬</mo><mi>A</mi></mrow><mo>⁢</mo><mi>R</mi></mrow></mrow></math></td><td><math xmlns="http://www.w3.org/1998/Math/MathML"><mrow><mi>A</mi><mo>⁢</mo><mi>R</mi></mrow></math></td><td><strong>Implemented</strong><br>Complement of the negated literal.</td></tr>
+<tr><th scope="row">2</th><td><math xmlns="http://www.w3.org/1998/Math/MathML"><mrow><mi>R</mi><mo>−</mo><mrow><mi>X</mi><mo>⁢</mo><mi>R</mi></mrow></mrow></math></td><td><math xmlns="http://www.w3.org/1998/Math/MathML"><mrow><mn>2</mn><mo>⁢</mo><mrow><mrow><mo>¬</mo><mi>A</mi></mrow><mo>⁢</mo><mi>R</mi></mrow></mrow></math></td><td><strong>Implemented</strong><br>The new coefficient is multiplied by 2.</td></tr>
+<tr><th scope="row">3</th><td><math xmlns="http://www.w3.org/1998/Math/MathML"><mrow><mrow><mi>A</mi><mo>⁢</mo><mi>R</mi></mrow><mo>+</mo><mi>R</mi></mrow></math></td><td><math xmlns="http://www.w3.org/1998/Math/MathML"><mrow><mrow><mi>A</mi><mo>⁢</mo><mi>R</mi></mrow><mo>+</mo><mi>R</mi></mrow></math></td><td><strong>Comment only</strong><br>The comment leaves the two terms as they are.</td></tr>
+<tr><th scope="row">3</th><td><math xmlns="http://www.w3.org/1998/Math/MathML"><mrow><mrow><mrow><mo>¬</mo><mi>A</mi></mrow><mo>⁢</mo><mi>R</mi></mrow><mo>+</mo><mi>R</mi></mrow></math></td><td><math xmlns="http://www.w3.org/1998/Math/MathML"><mrow><mn>2</mn><mi>R</mi><mo>−</mo><mrow><mi>A</mi><mo>⁢</mo><mi>R</mi></mrow></mrow></math></td><td><strong>Corrected · inactive</strong><br>The comment gives <math xmlns="http://www.w3.org/1998/Math/MathML"><mi>R</mi><mo>−</mo><mrow><mi>A</mi><mo>⁢</mo><mi>R</mi></mrow></math> and omits the extra R.</td></tr>
+<tr><th scope="row">3</th><td><math xmlns="http://www.w3.org/1998/Math/MathML"><mrow><mrow><mi>X</mi><mo>⁢</mo><mi>R</mi></mrow><mo>+</mo><mi>R</mi></mrow></math></td><td><math xmlns="http://www.w3.org/1998/Math/MathML"><mrow><mn>2</mn><mo>⁢</mo><mrow><mi>A</mi><mo>⁢</mo><mi>R</mi></mrow></mrow></math></td><td><strong>Corrected · inactive</strong><br>The comment gives <math xmlns="http://www.w3.org/1998/Math/MathML"><mrow><mn>2</mn><mo>⁢</mo><mrow><mi>A</mi><mo>⁢</mo><mi>R</mi></mrow></mrow><mo>−</mo><mi>R</mi></math> and omits the extra R.</td></tr>
+<tr><th scope="row">4</th><td><math xmlns="http://www.w3.org/1998/Math/MathML"><mrow><mrow><mi>A</mi><mo>⁢</mo><mi>R</mi></mrow><mo>−</mo><mrow><mrow><mo>¬</mo><mi>A</mi></mrow><mo>⁢</mo><mi>R</mi></mrow></mrow></math></td><td><math xmlns="http://www.w3.org/1998/Math/MathML"><mrow><mi>X</mi><mo>⁢</mo><mi>R</mi></mrow></math></td><td><strong>Implemented</strong><br>This creates the signed factor.</td></tr>
+<tr><th scope="row">4</th><td><math xmlns="http://www.w3.org/1998/Math/MathML"><mrow><mrow><mrow><mo>¬</mo><mi>A</mi></mrow><mo>⁢</mo><mi>R</mi></mrow><mo>−</mo><mrow><mi>A</mi><mo>⁢</mo><mi>R</mi></mrow></mrow></math></td><td><math xmlns="http://www.w3.org/1998/Math/MathML"><mrow><mo>−</mo><mrow><mi>X</mi><mo>⁢</mo><mi>R</mi></mrow></mrow></math></td><td><strong>Implemented</strong><br>The opposite input order changes the sign.</td></tr>
+<tr><th scope="row">4</th><td><math xmlns="http://www.w3.org/1998/Math/MathML"><mrow><mrow><mi>A</mi><mo>⁢</mo><mi>R</mi></mrow><mo>−</mo><mrow><mi>X</mi><mo>⁢</mo><mi>R</mi></mrow></mrow></math></td><td><math xmlns="http://www.w3.org/1998/Math/MathML"><mrow><mi>R</mi><mo>−</mo><mrow><mi>A</mi><mo>⁢</mo><mi>R</mi></mrow></mrow></math></td><td><strong>Comment only</strong><br>The comment is correct. This also equals <math xmlns="http://www.w3.org/1998/Math/MathML"><mrow><mrow><mo>¬</mo><mi>A</mi></mrow><mo>⁢</mo><mi>R</mi></mrow></math>.</td></tr>
+<tr><th scope="row">4</th><td><math xmlns="http://www.w3.org/1998/Math/MathML"><mrow><mrow><mrow><mo>¬</mo><mi>A</mi></mrow><mo>⁢</mo><mi>R</mi></mrow><mo>−</mo><mrow><mi>X</mi><mo>⁢</mo><mi>R</mi></mrow></mrow></math></td><td><math xmlns="http://www.w3.org/1998/Math/MathML"><mrow><mn>2</mn><mi>R</mi><mo>−</mo><mrow><mn>3</mn><mo>⁢</mo><mrow><mi>A</mi><mo>⁢</mo><mi>R</mi></mrow></mrow></mrow></math></td><td><strong>Comment only</strong><br>The comment is correct. The code declines the pair.</td></tr>
+    </tbody>
+  </table></div>
+  <p>Rule 1 matches terms with coefficients of the same sign and one differing factor on the same variable. Rule 2 matches opposite signs with one extra variable on one term. Rule 4 matches opposite signs and differing positive and negative literals on the same variable. Rule 3’s branch is empty. In particular, the corrected identity <math xmlns="http://www.w3.org/1998/Math/MathML"><mrow><mi>X</mi><mo>⁢</mo><mi>R</mi></mrow><mo>+</mo><mi>R</mi><mo>=</mo><mrow><mn>2</mn><mo>⁢</mo><mrow><mi>A</mi><mo>⁢</mo><mi>R</mi></mrow></mrow></math> could combine a pair into one term.</p>
+  <p>For unequal coefficients, take a portion of equal magnitude from each coefficient and apply the rule to that portion. Keep the unmatched remainder. Rule 2’s signed case doubles the new coefficient after the portion is selected. The Rule 4 comments give these weighted cases, each in both input orders.</p>
+  <div class="table-scroll"><table>
+    <caption>All eight weighted Rule 4 examples, grouped by equivalent order</caption>
+    <thead><tr><th scope="col">First order</th><th scope="col">Second order</th><th scope="col">Result</th></tr></thead>
+    <tbody>
+      <tr><td><math xmlns="http://www.w3.org/1998/Math/MathML"><mrow><mrow><mn>3</mn><mo>⁢</mo><mrow><mi>A</mi><mo>⁢</mo><mi>R</mi></mrow></mrow><mo>−</mo><mrow><mn>2</mn><mo>⁢</mo><mrow><mrow><mo>¬</mo><mi>A</mi></mrow><mo>⁢</mo><mi>R</mi></mrow></mrow></mrow></math></td><td><math xmlns="http://www.w3.org/1998/Math/MathML"><mrow><mo>−</mo><mrow><mn>2</mn><mo>⁢</mo><mrow><mrow><mo>¬</mo><mi>A</mi></mrow><mo>⁢</mo><mi>R</mi></mrow></mrow><mo>+</mo><mrow><mn>3</mn><mo>⁢</mo><mrow><mi>A</mi><mo>⁢</mo><mi>R</mi></mrow></mrow></mrow></math></td><td><math xmlns="http://www.w3.org/1998/Math/MathML"><mrow><mrow><mi>A</mi><mo>⁢</mo><mi>R</mi></mrow><mo>+</mo><mrow><mn>2</mn><mo>⁢</mo><mrow><mi>X</mi><mo>⁢</mo><mi>R</mi></mrow></mrow></mrow></math></td></tr>
+      <tr><td><math xmlns="http://www.w3.org/1998/Math/MathML"><mrow><mo>−</mo><mrow><mn>3</mn><mo>⁢</mo><mrow><mi>A</mi><mo>⁢</mo><mi>R</mi></mrow></mrow><mo>+</mo><mrow><mn>2</mn><mo>⁢</mo><mrow><mrow><mo>¬</mo><mi>A</mi></mrow><mo>⁢</mo><mi>R</mi></mrow></mrow></mrow></math></td><td><math xmlns="http://www.w3.org/1998/Math/MathML"><mrow><mrow><mn>2</mn><mo>⁢</mo><mrow><mrow><mo>¬</mo><mi>A</mi></mrow><mo>⁢</mo><mi>R</mi></mrow></mrow><mo>−</mo><mrow><mn>3</mn><mo>⁢</mo><mrow><mi>A</mi><mo>⁢</mo><mi>R</mi></mrow></mrow></mrow></math></td><td><math xmlns="http://www.w3.org/1998/Math/MathML"><mrow><mo>−</mo><mrow><mi>A</mi><mo>⁢</mo><mi>R</mi></mrow><mo>−</mo><mrow><mn>2</mn><mo>⁢</mo><mrow><mi>X</mi><mo>⁢</mo><mi>R</mi></mrow></mrow></mrow></math></td></tr>
+      <tr><td><math xmlns="http://www.w3.org/1998/Math/MathML"><mrow><mrow><mn>2</mn><mo>⁢</mo><mrow><mi>A</mi><mo>⁢</mo><mi>R</mi></mrow></mrow><mo>−</mo><mrow><mn>3</mn><mo>⁢</mo><mrow><mrow><mo>¬</mo><mi>A</mi></mrow><mo>⁢</mo><mi>R</mi></mrow></mrow></mrow></math></td><td><math xmlns="http://www.w3.org/1998/Math/MathML"><mrow><mo>−</mo><mrow><mn>3</mn><mo>⁢</mo><mrow><mrow><mo>¬</mo><mi>A</mi></mrow><mo>⁢</mo><mi>R</mi></mrow></mrow><mo>+</mo><mrow><mn>2</mn><mo>⁢</mo><mrow><mi>A</mi><mo>⁢</mo><mi>R</mi></mrow></mrow></mrow></math></td><td><math xmlns="http://www.w3.org/1998/Math/MathML"><mrow><mo>−</mo><mrow><mrow><mo>¬</mo><mi>A</mi></mrow><mo>⁢</mo><mi>R</mi></mrow><mo>+</mo><mrow><mn>2</mn><mo>⁢</mo><mrow><mi>X</mi><mo>⁢</mo><mi>R</mi></mrow></mrow></mrow></math></td></tr>
+      <tr><td><math xmlns="http://www.w3.org/1998/Math/MathML"><mrow><mo>−</mo><mrow><mn>2</mn><mo>⁢</mo><mrow><mi>A</mi><mo>⁢</mo><mi>R</mi></mrow></mrow><mo>+</mo><mrow><mn>3</mn><mo>⁢</mo><mrow><mrow><mo>¬</mo><mi>A</mi></mrow><mo>⁢</mo><mi>R</mi></mrow></mrow></mrow></math></td><td><math xmlns="http://www.w3.org/1998/Math/MathML"><mrow><mrow><mn>3</mn><mo>⁢</mo><mrow><mrow><mo>¬</mo><mi>A</mi></mrow><mo>⁢</mo><mi>R</mi></mrow></mrow><mo>−</mo><mrow><mn>2</mn><mo>⁢</mo><mrow><mi>A</mi><mo>⁢</mo><mi>R</mi></mrow></mrow></mrow></math></td><td><math xmlns="http://www.w3.org/1998/Math/MathML"><mrow><mrow><mrow><mo>¬</mo><mi>A</mi></mrow><mo>⁢</mo><mi>R</mi></mrow><mo>−</mo><mrow><mn>2</mn><mo>⁢</mo><mrow><mi>X</mi><mo>⁢</mo><mi>R</mi></mrow></mrow></mrow></math></td></tr>
+    </tbody>
+  </table></div>
+  <p>The engine applies these rules greedily as terms arrive. Two lists can evaluate to the same function and finish with different masks or term counts. The count is a property of a particular compacted representation.</p>
+</section>
+
+<section id="expansion" aria-labelledby="expansion-title">
+  <h2 id="expansion-title">Expansion, substitution, and back-transformation</h2>
+  <p>The archive uses two different expansions. <code>ExpandxA</code> replaces one signed factor with two terms at a time. <code>Expand</code> then fills in a missing variable with the sum of its positive and negative literal. The intended identities are</p>
+  <div class="equation"><math xmlns="http://www.w3.org/1998/Math/MathML" display="block"><mtable columnalign="right left"><mtr><mtd><mrow><mi>X</mi><mo>⁢</mo><mi>R</mi></mrow></mtd><mtd><mrow><mo>=</mo><mrow><mn>2</mn><mo>⁢</mo><mrow><mi>A</mi><mo>⁢</mo><mi>R</mi></mrow></mrow><mo>−</mo><mi>R</mi><mo>,</mo></mrow></mtd></mtr><mtr><mtd><mi>R</mi></mtd><mtd><mrow><mo>=</mo><mrow><mi>A</mi><mo>⁢</mo><mi>R</mi></mrow><mo>+</mo><mrow><mrow><mo>¬</mo><mi>A</mi></mrow><mo>⁢</mo><mi>R</mi></mrow><mo>.</mo></mrow></mtd></mtr></mtable></math></div>
+  <p>The second identity splits a partial assignment into two. Repeating it gives terms with positive or negative literals for every variable used by the expression. To get the ordinary reduced polynomial required by the general back-transformation, expand <code>!A</code> as <math xmlns="http://www.w3.org/1998/Math/MathML"><mn>1</mn><mo>−</mo><mi>A</mi></math> and <code>xA</code> as <math xmlns="http://www.w3.org/1998/Math/MathML"><mn>2</mn><mi>A</mi><mo>−</mo><mn>1</mn></math>, distribute, reduce powers, and collect by the ordinary variable masks.</p>
+  <p>Symbolic substitution of a signal <var>p</var> for <var>A</var> uses <var>p</var> for <code>A</code>, <math xmlns="http://www.w3.org/1998/Math/MathML"><mn>1</mn><mo>−</mo><mi>p</mi></math> for <code>!A</code>, and <math xmlns="http://www.w3.org/1998/Math/MathML"><mn>2</mn><mi>p</mi><mo>−</mo><mn>1</mn></math> for <code>xA</code>. Multiply the replacement factors and preserve the original term coefficient.</p>
+
+  <h3>Verified limits of the archived routines</h3>
+  <p>The table records the source before correction. The three BLB cases have been repaired in <code>EBBase.cs</code>, with each change marked <code>ChatGPT correction</code>. Back-transformation now expands mixed factors into the reduced 0/1 basis and subtracts each extracted row in that basis. The same correction handles full 64-bit words, and the degree sorter retains terms of degree greater than 64. The line references in the table refer to the pre-correction source.</p>
+  <p>LinearBoolean3 now handles the 32-input boundary as well. Further checks exposed an inverted XOR multiplier sign, an OR error when both operands were the same object, and an uncollected zero when negating the constant 1. Those cases are corrected and marked in the C# source. Coefficients now use checked 64-bit arithmetic. The original three-input verification and the added gate, boundary, and overflow checks passed.</p>
+  <div class="table-scroll"><table>
+    <caption>Small reproducible cases from a local C# harness</caption>
+    <thead><tr><th scope="col">Routine</th><th scope="col">Input and expected result</th><th scope="col">Observed result and source</th></tr></thead>
+    <tbody>
+      <tr><th scope="row">BLB back-transformation</th><td><math xmlns="http://www.w3.org/1998/Math/MathML"><mn>1</mn><mo>−</mo><mi>A</mi><mo>+</mo><mi>X</mi><mo>=</mo><mi>A</mi></math> has only the row <code>1</code> true.</td><td>The routine returned two rows and no error. It uses the first stored term as a row without normalizing the mixed factors. See <code>EBBase.cs</code>, lines 2140–2220.</td></tr>
+      <tr><th scope="row">BLB term expansion</th><td>Expand a term containing input 0 on the absent input 64 in a 65-input bitmap. At the all-zero row, the two replacements should sum to 0.</td><td>They sum to −1. <code>EBUnKnownBitMap.Expand</code> checks the requested word but writes both replacements into word 0. See <code>EBBase.cs</code>, lines 853–875.</td></tr>
+      <tr><th scope="row">BLB term substitution</th><td>Substitute TRUE for <var>A</var> in <math xmlns="http://www.w3.org/1998/Math/MathML"><mn>2</mn><mi>A</mi></math>. The result should be 2.</td><td>The result is 1. The nonconstant path of <code>InsertUnknowns</code> builds the factor product without applying the original coefficient. See <code>EBBase.cs</code>, lines 1070–1144.</td></tr>
+      <tr><th scope="row">LinearBoolean3 input boundary</th><td>Back-transform <var>A</var> on a 32-input list. The term fits the mask.</td><td>The routine rejects it. Its 32-bit shift used to build the maximum mask wraps the shift count at 32. See <code>LinearBooleanBase.cs</code>, lines 384–405.</td></tr>
+    </tbody>
+  </table></div>
+  <p>These are implementation limits of the archived paths. The standalone proof uses exact arithmetic and the fully reduced 0/1 polynomial.</p>
+</section>
+
+<section id="measurements" aria-labelledby="measurements-title">
+  <h2 id="measurements-title">What the old compression numbers tell us</h2>
+  <div class="table-scroll"><table class="numbers">
+    <caption>Transcription of <code>BLB/Booleandoc/compacting.txt</code></caption>
+    <thead><tr><th scope="col">Bits</th><th scope="col">Max</th><th scope="col">Normal</th><th scope="col">invComp</th><th scope="col">Recorded %</th><th scope="col">XComp</th></tr></thead>
+    <tbody><tr><th scope="row">2</th><td>4</td><td>3</td><td>2</td><td>50%</td><td>(2)</td></tr>
+<tr><th scope="row">3</th><td>8</td><td>7</td><td>5</td><td>63%</td><td>(3)</td></tr>
+<tr><th scope="row">4</th><td>16</td><td>15</td><td>10</td><td>63%</td><td>(4)</td></tr>
+<tr><th scope="row">5</th><td>32</td><td>31</td><td>21</td><td>65%</td><td>(5)</td></tr>
+<tr><th scope="row">10</th><td>1024</td><td>1023</td><td>482</td><td>47%</td><td>(26)</td></tr>
+<tr><th scope="row">11</th><td>2048</td><td>2047</td><td>965</td><td>47%</td><td>(27)</td></tr></tbody>
+  </table></div>
+  <p>The percentage column is approximately <code>invComp</code> divided by <code>max</code>. The normal counts are all <math xmlns="http://www.w3.org/1998/Math/MathML"><msup><mn>2</mn><mi>n</mi></msup><mo>−</mo><mn>1</mn></math>. The heading <code>XComp</code>, the small values, and the use of <code>GetTermsCount()</code> in the project make stored term counts a plausible reading of the parentheses. The note gives no input expression, insertion order, or explanation of the parentheses. The available logs do not tie <code>(27)</code> to a specific run, so its meaning remains unconfirmed.</p>
+  <p>Parity is a candidate because its ordinary expansion has exactly the recorded normal counts. OR also has <math xmlns="http://www.w3.org/1998/Math/MathML"><msup><mn>2</mn><mi>n</mi></msup><mo>−</mo><mn>1</mn></math> expanded terms, so that column alone does not identify the function. To test parity, I built its ordinary polynomial with coefficient <math xmlns="http://www.w3.org/1998/Math/MathML"><msup><mrow><mo>(</mo><mo>−</mo><mn>2</mn><mo>)</mo></mrow><mrow><mo>|</mo><mi>S</mi><mo>|</mo><mo>−</mo><mn>1</mn></mrow></msup></math> for each nonempty support <var>S</var>. I compacted it in ascending and descending mask order and also built it as a chain of XOR gates. Every result was checked on all its input rows.</p>
+  <div class="table-scroll"><table class="numbers">
+    <caption>Reproduction on parity using the archived BLB code</caption>
+    <thead><tr><th scope="col">Bits</th><th scope="col">Ascending, literal</th><th scope="col">Ascending, mixed</th><th scope="col">Descending, literal</th><th scope="col">Descending, mixed</th><th scope="col">XOR chain</th></tr></thead>
+    <tbody><tr><th scope="row">2</th><td>2</td><td>2</td><td>2</td><td>2</td><td>2</td></tr>
+<tr><th scope="row">3</th><td>4</td><td>4</td><td>5</td><td>3</td><td>3</td></tr>
+<tr><th scope="row">4</th><td>8</td><td>6</td><td>8</td><td>4</td><td>4</td></tr>
+<tr><th scope="row">5</th><td>16</td><td>10</td><td>17</td><td>5</td><td>5</td></tr>
+<tr><th scope="row">10</th><td>512</td><td>44</td><td>242</td><td>10</td><td>10</td></tr>
+<tr><th scope="row">11</th><td>1024</td><td>57</td><td>485</td><td>11</td><td>11</td></tr></tbody>
+  </table></div>
+  <p>“Literal” enables Rules 1 and 2 from a positive-monomial starting expression. “Mixed” also enables Rule 4, which can introduce <code>xA</code>. The XOR chain uses the existing <code>BoolXOR</code> routine with its built-in compaction. At 11 inputs the mixed results were 57 or 11 terms depending on order. Those results show that a count as small as 27 is plausible, while leaving the historical result unresolved.</p>
+
+  <h3>Why XOR can stay compact</h3>
+  <p>Writing <math xmlns="http://www.w3.org/1998/Math/MathML"><msub><mi>X</mi><mi>k</mi></msub><mo>=</mo><mn>2</mn><msub><mi>A</mi><mi>k</mi></msub><mo>−</mo><mn>1</mn></math>, parity of the first <var>k</var> inputs satisfies a simple recurrence.</p>
+  <div class="equation"><math xmlns="http://www.w3.org/1998/Math/MathML" display="block"><msub><mi>P</mi><mi>k</mi></msub><mo>=</mo><msub><mi>P</mi><mrow><mi>k</mi><mo>−</mo><mn>1</mn></mrow></msub><mo>⊕</mo><msub><mi>A</mi><mi>k</mi></msub><mo>=</mo><msub><mi>A</mi><mi>k</mi></msub><mo>−</mo><mrow><msub><mi>X</mi><mi>k</mi></msub><mo>⁢</mo><msub><mi>P</mi><mrow><mi>k</mi><mo>−</mo><mn>1</mn></mrow></msub></mrow><mo>.</mo></math></div>
+  <p>Start with <math xmlns="http://www.w3.org/1998/Math/MathML"><msub><mi>P</mi><mn>0</mn></msub><mo>=</mo><mn>0</mn></math>. Each step adds one term and multiplies all the earlier terms by the new signed factor. This constructs <var>n</var> mixed terms with integer coefficients. In particular, an 11-input parity has a direct 11-term representation. A pure signed encoding can write its signed output as a single product, with the sign determined by the number of inputs.</p>
+  <p>These compact forms can be useful for XOR-heavy subexpressions. A dense transform still allocates its full array, so fewer stored terms matter most when a sparse or factored path can use them directly. For dense ordinary 0/1 polynomials the fast method is the subset zeta and Möbius transforms. FWHT handles a pure signed basis. Mixed terms require evaluation or a basis conversion before either dense coefficient transform can be applied.</p>
+</section>
+
+<section id="programs" aria-labelledby="programs-title">
+  <h2 id="programs-title">What the two projects contain</h2>
+  <p><strong>LinearBoolean3</strong> is the earlier expanded 0/1 implementation. <code>LinearBooleanBase.cs</code> stores a 32-bit variable mask and a signed integer coefficient per term. It multiplies masks by OR and accumulates coefficients in a dictionary. Its <code>TransformBackToBoolean</code> sorts by number of variables, extracts the first term’s row, and removes it by AND with the inverse. The archived <code>AndAction3</code> constructs and checks all 256 three-input functions. The source also includes Golomb-ruler constraints, a small input/output search experiment, and separate numerical solving experiments.</p>
+  <p><strong>BLB</strong> keeps the same gate formulas but adds the two-mask format, local compaction, and word-sized blocks of symbolic bits. It contains SHA-256 stage experiments and reference hashing, Keccak-f[1600] experiments, and another Golomb-ruler solver. The checked-in entry point selects <code>KCKReverseSolverActionMoreDirectWay</code>. These source paths document experiments with symbolic networks. Their existence does not establish a completed hash inversion or a measured speedup.</p>
+  <p>The older code provides reusable examples of mask-based accumulation, bit-block adders, truth-row checks, and OR-of-AND constraint recovery. A new multiplier can use the plain 0/1 representation as a reference. The mixed form can then be benchmarked on workloads where signed factors or early zero products actually keep the work small.</p>
+</section>
+
+<section id="verification" aria-labelledby="verification-title">
+  <h2 id="verification-title">Verification and source locations</h2>
+  <p>A local harness compiled the archived C# against the installed .NET runtime and called the selected methods directly. Both archived BLB rule suites passed. The multiplication check compared 4,096 ordered products of all possible factor masks on three variables, evaluating every product on all eight rows. The compaction check compared 9,216 ordered two-term inputs on two variables, including unequal positive and negative coefficients, over all four rows. The original LinearBoolean3 back-transformation recovered the correct rows for all 256 three-input functions.</p>
+  <p>The rule identities in the tables can also be checked without the code. Set <var>R</var> to 1 and evaluate both sides at <var>A</var> equal to 0 and 1. Multiplication by the common <var>R</var> then gives the identity for every assignment of the other variables. This check distinguishes the valid formulas from the two incorrect comments in the unused Rule 3.</p>
+  <ul>
+    <li><code>BLB/BLB/EBBase/EBBase.cs</code>, lines 14–18 for the representation, 158–546 for the matchers, 550–726 for multiplication and evaluation, 796–875 and 1455–1590 for expansion, and 1706–2113 for compaction.</li>
+    <li><code>BLB/BLB/Tests/Tests.cs</code> for the archived compaction and multiplication tests, and <code>BLB/Booleandoc/compacting.txt</code> for the original counts.</li>
+    <li><code>BLB/BLB/Program.cs</code> and <code>BLB/BLB/EBOGR/EBOGR.cs</code> for the hash and ruler experiments.</li>
+    <li><code>LinearBoolean3/LinearBoolean/LinearBooleanBase.cs</code> and <code>Program.cs</code> for the original arithmetic and the three-input verification loop.</li>
+  </ul>
+  <p><a href="AlgebraicBoolean.html">Return to the AlgebraicBoolean article</a>.</p>
+</section>
+  </main>
+  <footer><div class="wrap">AlgebraicBoolean · Review of the archived C# projects</div></footer>
+</body>
+</html>

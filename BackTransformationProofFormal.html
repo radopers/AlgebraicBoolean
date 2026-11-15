@@ -1,0 +1,176 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="color-scheme" content="light">
+  <title>AlgebraicBoolean back-transformation · Formal proof</title>
+  <style>
+    :root {
+      --paper: #fcfbf7;
+      --ink: #202624;
+      --muted: #4d5b55;
+      --accent: #24564b;
+      --tint: #ecf2ec;
+      --rule: #ccd6ce;
+    }
+    * { box-sizing: border-box; }
+    body { margin: 0; color: var(--ink); background: var(--paper); font: 1.08rem/1.65 Georgia, serif; }
+    .wrap { width: min(50rem, calc(100% - 3rem)); margin-inline: auto; }
+    header { border-top: .36rem solid var(--accent); border-bottom: 1px solid var(--rule); padding: 2.7rem 0 1.7rem; background: var(--tint); }
+    .kicker { margin: 0 0 .5rem; font: 700 .76rem/1.4 system-ui, sans-serif; text-transform: uppercase; letter-spacing: .1em; color: var(--accent); }
+    h1, h2, h3 { margin: 0 0 .65rem; line-height: 1.22; }
+    h1 { font-size: clamp(2.2rem, 5.5vw, 3.55rem); font-weight: 500; max-width: 19ch; }
+    h2 { font-size: clamp(1.55rem, 4vw, 2rem); font-weight: 500; }
+    h3 { margin-top: 1.45rem; font-size: 1.16rem; }
+    nav { display: flex; flex-wrap: wrap; gap: .3rem 1.2rem; margin-top: 1rem; font: 620 .85rem/1.7 system-ui, sans-serif; }
+    a { color: var(--accent); text-underline-offset: .17em; }
+    a:focus-visible { outline: 2px solid var(--accent); outline-offset: .2rem; }
+    p { margin: 0 0 .8rem; max-width: 73ch; }
+    section { margin: 2rem 0; scroll-margin-top: 1rem; }
+    section + section { border-top: 1px solid var(--rule); padding-top: 1.6rem; }
+    .theorem { background: var(--tint); border-left: .22rem solid var(--accent); padding: .8rem 1rem; }
+    .theorem p { margin: 0; }
+    math { font-family: "Cambria Math", "STIX Two Math", "Latin Modern Math", math; }
+    .equation { margin: .75rem 0 1rem; padding: .4rem .2rem; overflow-x: auto; }
+    .qed { color: var(--accent); margin-left: .3em; }
+    .derivation { padding-inline-start: 1.55rem; }
+    .derivation li { padding-left: .35rem; margin: .55rem 0; }
+    .derivation li > p { margin-bottom: .25rem; }
+    .derivation .equation { margin-top: .2rem; }
+    ul { padding-inline-start: 1.25rem; }
+    li { margin: .35rem 0; }
+    code { overflow-wrap: anywhere; font-size: .88em; }
+    .verification { color: var(--muted); font-size: .94rem; }
+    footer { color: var(--muted); border-top: 1px solid var(--rule); padding: 1.15rem 0 1.7rem; font: .83rem/1.5 system-ui, sans-serif; }
+    @media (max-width: 35rem) {
+      .wrap { width: calc(100% - 2rem); }
+      header { padding-top: 1.8rem; }
+      .equation { padding-inline: 0; }
+      .derivation { padding-inline-start: 1.25rem; }
+    }
+    @media print {
+      body { font-size: 11pt; background: white; }
+      header { padding: .5rem 0 1rem; background: white; }
+      .wrap { width: 100%; }
+      nav { display: none; }
+      h1 { font-size: 28pt; }
+      h2 { font-size: 17pt; }
+      h1, h2, h3 { break-after: avoid; }
+      section { margin: 1.3rem 0; }
+      section + section { padding-top: .85rem; }
+      .equation, .theorem, .derivation li { break-inside: avoid; }
+    }
+  </style>
+</head>
+<body>
+  <header>
+    <div class="wrap">
+      <p class="kicker">AlgebraicBoolean · Formal edition</p>
+      <h1>The back-transformation</h1>
+      <nav aria-label="In this document">
+        <a href="#notation">Setting and notation</a>
+        <a href="#proof">Theorem and proof</a>
+        <a href="#subtraction">Subtraction</a>
+        <a href="#full-adder">Full adder</a>
+        <a href="#scope">Scope</a>
+      </nav>
+    </div>
+  </header>
+  <main class="wrap">
+
+<section id="notation">
+  <h2>1. Setting and notation</h2>
+  <p>Fix a finite list of inputs <math xmlns="http://www.w3.org/1998/Math/MathML"><mi>x</mi><mo>=</mo><mrow><mo>(</mo><msub><mi>x</mi><mn>1</mn></msub><mo>,</mo><mo>…</mo><mo>,</mo><msub><mi>x</mi><mi>n</mi></msub><mo>)</mo></mrow></math> with index set <math xmlns="http://www.w3.org/1998/Math/MathML"><mi>N</mi><mo>=</mo><mrow><mo>{</mo><mn>1</mn><mo>,</mo><mo>…</mo><mo>,</mo><mi>n</mi><mo>}</mo></mrow></math> and Boolean cube <math xmlns="http://www.w3.org/1998/Math/MathML"><msup><mrow><mo>{</mo><mn>0</mn><mo>,</mo><mn>1</mn><mo>}</mo></mrow><mi>n</mi></msup></math>. Work with polynomials over the reals. The original AlgebraicBoolean gate translations, for inputs with values in <math xmlns="http://www.w3.org/1998/Math/MathML"><mrow><mo>{</mo><mn>0</mn><mo>,</mo><mn>1</mn><mo>}</mo></mrow></math>, are</p>
+  <div class="equation"><math xmlns="http://www.w3.org/1998/Math/MathML" display="block"><mtable columnalign="right left"><mtr><mtd><mrow><mo>¬</mo><mi>p</mi></mrow></mtd><mtd><mrow><mo>↦</mo><mn>1</mn><mo>−</mo><mi>p</mi></mrow></mtd></mtr><mtr><mtd><mrow><mi>p</mi><mo>∧</mo><mi>q</mi></mrow></mtd><mtd><mrow><mo>↦</mo><mrow><mi>p</mi><mo>⁢</mo><mi>q</mi></mrow></mrow></mtd></mtr><mtr><mtd><mrow><mi>p</mi><mo>∨</mo><mi>q</mi></mrow></mtd><mtd><mrow><mo>↦</mo><mi>p</mi><mo>+</mo><mi>q</mi><mo>−</mo><mrow><mi>p</mi><mo>⁢</mo><mi>q</mi></mrow></mrow></mtd></mtr><mtr><mtd><mrow><mi>p</mi><mo>⊕</mo><mi>q</mi></mrow></mtd><mtd><mrow><mo>↦</mo><mi>p</mi><mo>+</mo><mi>q</mi><mo>−</mo><mrow><mn>2</mn><mo>⁢</mo><mi>p</mi><mo>⁢</mo><mi>q</mi></mrow></mrow></mtd></mtr></mtable></math></div>
+  <p>Let <math xmlns="http://www.w3.org/1998/Math/MathML"><mi mathvariant="normal">red</mi></math> denote expansion, replacement of each positive power <math xmlns="http://www.w3.org/1998/Math/MathML"><msup><msub><mi>x</mi><mi>i</mi></msub><mi>k</mi></msup><mo>↦</mo><msub><mi>x</mi><mi>i</mi></msub></math>, and collection of like terms. Reduction preserves values on the Boolean cube. Consequently, a translated combinational network output is represented by a reduced polynomial that takes values in <math xmlns="http://www.w3.org/1998/Math/MathML"><mrow><mo>{</mo><mn>0</mn><mo>,</mo><mn>1</mn><mo>}</mo></mrow></math> throughout the cube.</p>
+  <p>For <math xmlns="http://www.w3.org/1998/Math/MathML"><mrow><mi>S</mi><mo>⊆</mo><mi>N</mi></mrow></math>, write <math xmlns="http://www.w3.org/1998/Math/MathML"><msub><mi>x</mi><mi>S</mi></msub></math> for the monomial supported on <math xmlns="http://www.w3.org/1998/Math/MathML"><mi>S</mi></math>. A reduced polynomial is a linear combination of these monomials.</p>
+  <div class="equation"><math xmlns="http://www.w3.org/1998/Math/MathML" display="block"><mtable columnalign="right left"><mtr><mtd><msub><mi>x</mi><mi>S</mi></msub></mtd><mtd><mrow><mo>=</mo><munder><mo>∏</mo><mrow><mi>i</mi><mo>∈</mo><mi>S</mi></mrow></munder><msub><mi>x</mi><mi>i</mi></msub><mo>,</mo><mspace width="0.7em"></mspace><msub><mi>x</mi><mo>∅</mo></msub><mo>=</mo><mn>1</mn><mo>,</mo></mrow></mtd></mtr><mtr><mtd><mrow><mi>p</mi><mo>⁡</mo><mrow><mo>(</mo><mi>x</mi><mo>)</mo></mrow></mrow></mtd><mtd><mrow><mo>=</mo><munder><mo>∑</mo><mrow><mi>S</mi><mo>⊆</mo><mi>N</mi></mrow></munder><mrow><msub><mi>c</mi><mi>S</mi></msub><mo>⁢</mo><msub><mi>x</mi><mi>S</mi></msub></mrow><mo>,</mo><mspace width="0.7em"></mspace><mrow><msub><mi>c</mi><mi>S</mi></msub><mo>∈</mo><mi>ℝ</mi></mrow><mo>.</mo></mrow></mtd></mtr></mtable></math></div>
+  <p>The degree of <math xmlns="http://www.w3.org/1998/Math/MathML"><msub><mi>x</mi><mi>S</mi></msub></math> is <math xmlns="http://www.w3.org/1998/Math/MathML"><mrow><mo>|</mo><mi>S</mi><mo>|</mo></mrow></math>. A coefficient of zero denotes an absent monomial. Let <math xmlns="http://www.w3.org/1998/Math/MathML"><msub><mi>v</mi><mi>S</mi></msub></math> be the Boolean input row whose 1-coordinates are exactly the indices in <math xmlns="http://www.w3.org/1998/Math/MathML"><mi>S</mi></math>. Its row polynomial is</p>
+  <div class="equation"><math xmlns="http://www.w3.org/1998/Math/MathML" display="block"><mrow><msub><mi>m</mi><mi>S</mi></msub><mo>⁡</mo><mrow><mo>(</mo><mi>x</mi><mo>)</mo></mrow></mrow><mo>=</mo><mrow><mrow><munder><mo>∏</mo><mrow><mi>i</mi><mo>∈</mo><mi>S</mi></mrow></munder><msub><mi>x</mi><mi>i</mi></msub></mrow><mo>⁢</mo><mrow><munder><mo>∏</mo><mrow><mrow><mi>j</mi><mo>∈</mo><mi>N</mi></mrow><mo>∖</mo><mi>S</mi></mrow></munder><mrow><mo>(</mo><mn>1</mn><mo>−</mo><msub><mi>x</mi><mi>j</mi></msub><mo>)</mo></mrow></mrow></mrow><mo>.</mo></math></div>
+  <p>The corresponding Boolean term is the AND of the variables indexed by <math xmlns="http://www.w3.org/1998/Math/MathML"><mi>S</mi></math> and the negations of those indexed by <math xmlns="http://www.w3.org/1998/Math/MathML"><mrow><mi>N</mi><mo>∖</mo><mi>S</mi></mrow></math>. Empty products equal 1. In particular, the empty support selects the all-zero row.</p>
+  <div class="equation"><math xmlns="http://www.w3.org/1998/Math/MathML" display="block"><mrow><msub><mi>m</mi><mi>S</mi></msub><mo>⁡</mo><mrow><mo>(</mo><msub><mi>v</mi><mi>T</mi></msub><mo>)</mo></mrow></mrow><mo>=</mo><mrow><mo fence="true" stretchy="true">{</mo><mtable columnalign="left left"><mtr><mtd><mrow><mn>1</mn><mo>,</mo></mrow></mtd><mtd><mrow><mtext>if</mtext><mspace width="0.35em"></mspace><mi>T</mi><mo>=</mo><mi>S</mi><mo>,</mo></mrow></mtd></mtr><mtr><mtd><mrow><mn>0</mn><mo>,</mo></mrow></mtd><mtd><mrow><mtext>if</mtext><mspace width="0.35em"></mspace><mi>T</mi><mo>≠</mo><mi>S</mi><mo>.</mo></mrow></mtd></mtr></mtable></mrow></math></div>
+</section>
+
+<section id="proof">
+  <h2>2. Theorem and proof</h2>
+  <div class="theorem">
+    <p><strong>Theorem.</strong> Let <math xmlns="http://www.w3.org/1998/Math/MathML"><mi>p</mi></math> be any reduced polynomial with values in <math xmlns="http://www.w3.org/1998/Math/MathML"><mrow><mo>{</mo><mn>0</mn><mo>,</mo><mn>1</mn><mo>}</mo></mrow></math> on the Boolean cube. At each nonzero stage, choose any nonzero term of minimum degree, save the Boolean AND term for its row, and remove that row by multiplying by the complement of its row polynomial and reducing. Every selected coefficient is <math xmlns="http://www.w3.org/1998/Math/MathML"><mo>+</mo><mn>1</mn></math>. The procedure terminates after exactly as many iterations as there are true rows, at most <math xmlns="http://www.w3.org/1998/Math/MathML"><msup><mn>2</mn><mi>n</mi></msup></math>, and the OR of the saved terms agrees with <math xmlns="http://www.w3.org/1998/Math/MathML"><mi>p</mi></math> on the entire cube.</p>
+  </div>
+
+  <h3>2.1 The selected coefficient</h3>
+  <p>Let <math xmlns="http://www.w3.org/1998/Math/MathML"><mrow><msub><mi>c</mi><mi>S</mi></msub><mo>⁢</mo><msub><mi>x</mi><mi>S</mi></msub></mrow></math> be a term of minimum degree among those with nonzero coefficient. At <math xmlns="http://www.w3.org/1998/Math/MathML"><msub><mi>v</mi><mi>S</mi></msub></math>, a monomial <math xmlns="http://www.w3.org/1998/Math/MathML"><msub><mi>x</mi><mi>T</mi></msub></math> evaluates to 1 precisely when <math xmlns="http://www.w3.org/1998/Math/MathML"><mi>T</mi><mo>⊆</mo><mi>S</mi></math>. Thus</p>
+  <div class="equation"><math xmlns="http://www.w3.org/1998/Math/MathML" display="block"><mrow><mi>p</mi><mo>⁡</mo><mrow><mo>(</mo><msub><mi>v</mi><mi>S</mi></msub><mo>)</mo></mrow></mrow><mo>=</mo><munder><mo>∑</mo><mrow><mi>T</mi><mo>⊆</mo><mi>S</mi></mrow></munder><msub><mi>c</mi><mi>T</mi></msub><mo>=</mo><msub><mi>c</mi><mi>S</mi></msub><mo>.</mo></math></div>
+  <p>The second equality holds because each proper subset <math xmlns="http://www.w3.org/1998/Math/MathML"><mi>T</mi><mo>⊊</mo><mi>S</mi></math> has smaller degree, hence <math xmlns="http://www.w3.org/1998/Math/MathML"><msub><mi>c</mi><mi>T</mi></msub><mo>=</mo><mn>0</mn></math>. As <math xmlns="http://www.w3.org/1998/Math/MathML"><mrow><mi>p</mi><mo>⁡</mo><mrow><mo>(</mo><msub><mi>v</mi><mi>S</mi></msub><mo>)</mo></mrow></mrow></math> is a Boolean value and <math xmlns="http://www.w3.org/1998/Math/MathML"><msub><mi>c</mi><mi>S</mi></msub><mo>≠</mo><mn>0</mn></math>, it follows that <math xmlns="http://www.w3.org/1998/Math/MathML"><msub><mi>c</mi><mi>S</mi></msub><mo>=</mo><mn>1</mn></math>. The argument applies to every minimum-degree choice, including ties and the constant monomial.</p>
+
+  <h3>2.2 Removal of exactly one row</h3>
+  <p>Save the Boolean term represented by <math xmlns="http://www.w3.org/1998/Math/MathML"><msub><mi>m</mi><mi>S</mi></msub></math>. Update the remainder by AND with its inverse.</p>
+  <div class="equation"><math xmlns="http://www.w3.org/1998/Math/MathML" display="block"><msub><mi>p</mi><mtext>new</mtext></msub><mo>=</mo><mrow><mi mathvariant="normal">red</mi><mo>⁡</mo><mrow><mo>(</mo><mrow><mi>p</mi><mo>⁢</mo><mrow><mo>(</mo><mn>1</mn><mo>−</mo><msub><mi>m</mi><mi>S</mi></msub><mo>)</mo></mrow></mrow><mo>)</mo></mrow></mrow><mo>.</mo></math></div>
+  <p>Since reduction preserves all Boolean evaluations, the row values of the new polynomial are</p>
+  <div class="equation"><math xmlns="http://www.w3.org/1998/Math/MathML" display="block"><mrow><msub><mi>p</mi><mtext>new</mtext></msub><mo>⁡</mo><mrow><mo>(</mo><msub><mi>v</mi><mi>T</mi></msub><mo>)</mo></mrow></mrow><mo>=</mo><mrow><mrow><mi>p</mi><mo>⁡</mo><mrow><mo>(</mo><msub><mi>v</mi><mi>T</mi></msub><mo>)</mo></mrow></mrow><mo>⁢</mo><mrow><mo>(</mo><mn>1</mn><mo>−</mo><mrow><msub><mi>m</mi><mi>S</mi></msub><mo>⁡</mo><mrow><mo>(</mo><msub><mi>v</mi><mi>T</mi></msub><mo>)</mo></mrow></mrow><mo>)</mo></mrow></mrow><mo>=</mo><mrow><mo fence="true" stretchy="true">{</mo><mtable columnalign="left left"><mtr><mtd><mrow><mn>0</mn><mo>,</mo></mrow></mtd><mtd><mrow><mtext>if</mtext><mspace width="0.35em"></mspace><mi>T</mi><mo>=</mo><mi>S</mi><mo>,</mo></mrow></mtd></mtr><mtr><mtd><mrow><mrow><mi>p</mi><mo>⁡</mo><mrow><mo>(</mo><msub><mi>v</mi><mi>T</mi></msub><mo>)</mo></mrow></mrow><mo>,</mo></mrow></mtd><mtd><mrow><mtext>if</mtext><mspace width="0.35em"></mspace><mi>T</mi><mo>≠</mo><mi>S</mi><mo>.</mo></mrow></mtd></mtr></mtable></mrow></math></div>
+  <p>Because the selected row had value 1, this update removes exactly one true row. The new polynomial is reduced and Boolean-valued, so the same selection argument applies at each subsequent nonzero stage.</p>
+
+  <h3>2.3 Detection of the zero polynomial</h3>
+  <p>For any nonzero reduced polynomial <math xmlns="http://www.w3.org/1998/Math/MathML"><mi>q</mi></math>, choose a nonzero term of minimum degree. The evaluation argument of §2.1 uses only the monomial supports to show that <math xmlns="http://www.w3.org/1998/Math/MathML"><mrow><mi>q</mi><mo>⁡</mo><mrow><mo>(</mo><msub><mi>v</mi><mi>S</mi></msub><mo>)</mo></mrow></mrow><mo>=</mo><msub><mi>c</mi><mi>S</mi></msub><mo>≠</mo><mn>0</mn></math> at its selected row. Therefore</p>
+  <div class="equation"><math xmlns="http://www.w3.org/1998/Math/MathML" display="block"><mrow><mo>(</mo><mrow><mi>q</mi><mo>⁡</mo><mrow><mo>(</mo><mi>x</mi><mo>)</mo></mrow></mrow><mo>=</mo><mn>0</mn><mo>,</mo><mspace width="0.35em"></mspace><mo>∀</mo><mrow><mi>x</mi><mo>∈</mo><msup><mrow><mo>{</mo><mn>0</mn><mo>,</mo><mn>1</mn><mo>}</mo></mrow><mi>n</mi></msup></mrow><mo>)</mo></mrow><mo>⟹</mo><mi>q</mi><mo>=</mo><mn>0</mn><mo>.</mo></math></div>
+  <p>In particular, two reduced polynomials with the same Boolean evaluations are identical, because their difference is reduced and has all evaluations zero.</p>
+
+  <h3>2.4 Termination and equivalence</h3>
+  <p>Write <math xmlns="http://www.w3.org/1998/Math/MathML"><msub><mi>p</mi><mn>0</mn></msub></math> for the initial polynomial, and let <math xmlns="http://www.w3.org/1998/Math/MathML"><mi>r</mi></math> be the number of rows at which it is 1. After <math xmlns="http://www.w3.org/1998/Math/MathML"><mi>k</mi></math> iterations, exactly <math xmlns="http://www.w3.org/1998/Math/MathML"><mi>r</mi><mo>−</mo><mi>k</mi></math> true rows remain. Every iteration leaves all other rows unchanged, including rows previously removed. After exactly <math xmlns="http://www.w3.org/1998/Math/MathML"><mi>r</mi></math> iterations, §2.3 implies that the remainder is the zero polynomial. Since the cube has <math xmlns="http://www.w3.org/1998/Math/MathML"><msup><mn>2</mn><mi>n</mi></msup></math> rows, <math xmlns="http://www.w3.org/1998/Math/MathML"><mi>r</mi><mo>≤</mo><msup><mn>2</mn><mi>n</mi></msup></math>.</p>
+  <p>If the selected supports are <math xmlns="http://www.w3.org/1998/Math/MathML"><msub><mi>S</mi><mn>1</mn></msub><mo>,</mo><mo>…</mo><mo>,</mo><msub><mi>S</mi><mi>r</mi></msub></math>, the recovered Boolean expression is</p>
+  <div class="equation"><math xmlns="http://www.w3.org/1998/Math/MathML" display="block"><munderover><mo>⋁</mo><mrow><mi>j</mi><mo>=</mo><mn>1</mn></mrow><mi>r</mi></munderover><mrow><mo>(</mo><mrow><munder><mo>⋀</mo><mrow><mi>i</mi><mo>∈</mo><msub><mi>S</mi><mi>j</mi></msub></mrow></munder><msub><mi>x</mi><mi>i</mi></msub></mrow><mo>∧</mo><mrow><munder><mo>⋀</mo><mrow><mrow><mi>i</mi><mo>∈</mo><mi>N</mi></mrow><mo>∖</mo><msub><mi>S</mi><mi>j</mi></msub></mrow></munder><mo>¬</mo><msub><mi>x</mi><mi>i</mi></msub></mrow><mo>)</mo></mrow><mo>.</mo></math></div>
+  <p>Each conjunction is true at precisely its selected row. Their disjunction therefore agrees with the initial polynomial on all inputs. The empty disjunction is FALSE and represents the initial zero polynomial. <span class="qed" aria-label="End of proof">□</span></p>
+</section>
+
+<section id="subtraction">
+  <h2>3. Subtraction in place of multiplication</h2>
+  <p>At the selected row <math xmlns="http://www.w3.org/1998/Math/MathML"><msub><mi>v</mi><mi>S</mi></msub></math>, both <math xmlns="http://www.w3.org/1998/Math/MathML"><mrow><mi>p</mi><mo>⁢</mo><msub><mi>m</mi><mi>S</mi></msub></mrow></math> and <math xmlns="http://www.w3.org/1998/Math/MathML"><msub><mi>m</mi><mi>S</mi></msub></math> evaluate to 1. At every other Boolean row they both evaluate to 0. The uniqueness result in §2.3 therefore gives</p>
+  <div class="equation"><math xmlns="http://www.w3.org/1998/Math/MathML" display="block"><mtable columnalign="right left"><mtr><mtd><mrow><mi mathvariant="normal">red</mi><mo>⁡</mo><mrow><mo>(</mo><mrow><mi>p</mi><mo>⁢</mo><msub><mi>m</mi><mi>S</mi></msub></mrow><mo>)</mo></mrow></mrow></mtd><mtd><mrow><mo>=</mo><msub><mi>m</mi><mi>S</mi></msub><mo>,</mo></mrow></mtd></mtr><mtr><mtd><mrow><mi mathvariant="normal">red</mi><mo>⁡</mo><mrow><mo>(</mo><mrow><mi>p</mi><mo>⁢</mo><mrow><mo>(</mo><mn>1</mn><mo>−</mo><msub><mi>m</mi><mi>S</mi></msub><mo>)</mo></mrow></mrow><mo>)</mo></mrow></mrow></mtd><mtd><mrow><mo>=</mo><mi>p</mi><mo>−</mo><msub><mi>m</mi><mi>S</mi></msub><mo>.</mo></mrow></mtd></mtr></mtable></math></div>
+  <p>Here <math xmlns="http://www.w3.org/1998/Math/MathML"><msub><mi>m</mi><mi>S</mi></msub></math> is expanded and like terms are collected. Its expansion is</p>
+  <div class="equation"><math xmlns="http://www.w3.org/1998/Math/MathML" display="block"><msub><mi>m</mi><mi>S</mi></msub><mo>=</mo><munder><mo>∑</mo><mrow><mi>U</mi><mo>⊆</mo><mi>N</mi><mo>∖</mo><mi>S</mi></mrow></munder><mrow><msup><mrow><mo>(</mo><mo>−</mo><mn>1</mn><mo>)</mo></mrow><mrow><mo>|</mo><mi>U</mi><mo>|</mo></mrow></msup><mo>⁢</mo><msub><mi>x</mi><mrow><mi>S</mi><mo>∪</mo><mi>U</mi></mrow></msub></mrow><mo>.</mo></math></div>
+  <p>The summand for <math xmlns="http://www.w3.org/1998/Math/MathML"><mi>U</mi><mo>=</mo><mo>∅</mo></math> is <math xmlns="http://www.w3.org/1998/Math/MathML"><msub><mi>x</mi><mi>S</mi></msub></math>. Every other summand has degree strictly greater than <math xmlns="http://www.w3.org/1998/Math/MathML"><mrow><mo>|</mo><mi>S</mi><mo>|</mo></mrow></math>. Subtraction cancels the selected monomial and changes only coefficients of higher degree. With a fixed order within each degree, the selection can advance through the monomial order as higher-degree coefficients are updated.</p>
+</section>
+
+<section id="full-adder">
+  <h2>4. Full-adder example</h2>
+  <p>The sum output <math xmlns="http://www.w3.org/1998/Math/MathML"><mi>D</mi><mo>=</mo><mi>A</mi><mo>⊕</mo><mi>B</mi><mo>⊕</mo><mi>C</mi></math> has the initial polynomial</p>
+  <div class="equation"><math xmlns="http://www.w3.org/1998/Math/MathML" display="block"><msub><mi>p</mi><mn>0</mn></msub><mo>=</mo><mi>A</mi><mo>+</mo><mi>B</mi><mo>+</mo><mi>C</mi><mo>−</mo><mrow><mn>2</mn><mo>⁢</mo><mrow><mi>A</mi><mo>⁢</mo><mi>B</mi></mrow></mrow><mo>−</mo><mrow><mn>2</mn><mo>⁢</mo><mrow><mi>A</mi><mo>⁢</mo><mi>C</mi></mrow></mrow><mo>−</mo><mrow><mn>2</mn><mo>⁢</mo><mrow><mi>B</mi><mo>⁢</mo><mi>C</mi></mrow></mrow><mo>+</mo><mrow><mn>4</mn><mo>⁢</mo><mrow><mi>A</mi><mo>⁢</mo><mi>B</mi><mo>⁢</mo><mi>C</mi></mrow></mrow><mo>.</mo></math></div>
+  <p>Choose <math xmlns="http://www.w3.org/1998/Math/MathML"><mi>A</mi></math> first among the degree-one terms. At iteration <math xmlns="http://www.w3.org/1998/Math/MathML"><mi>j</mi></math>, write <math xmlns="http://www.w3.org/1998/Math/MathML"><msub><mi>m</mi><mi>j</mi></msub></math> for the expanded row polynomial and <math xmlns="http://www.w3.org/1998/Math/MathML"><msub><mi>p</mi><mi>j</mi></msub></math> for the remainder after removing it.</p>
+  <ol class="derivation">
+    <li>
+      <p>Select <math xmlns="http://www.w3.org/1998/Math/MathML"><mi>A</mi></math> and save <math xmlns="http://www.w3.org/1998/Math/MathML"><mrow><mi>A</mi><mo>∧</mo><mo>¬</mo><mi>B</mi><mo>∧</mo><mo>¬</mo><mi>C</mi></mrow></math>.</p>
+      <div class="equation"><math xmlns="http://www.w3.org/1998/Math/MathML" display="block"><mtable columnalign="right left"><mtr><mtd><msub><mi>m</mi><mn>1</mn></msub></mtd><mtd><mrow><mo>=</mo><mrow><mi>A</mi><mo>−</mo><mrow><mi>A</mi><mo>⁢</mo><mi>B</mi></mrow><mo>−</mo><mrow><mi>A</mi><mo>⁢</mo><mi>C</mi></mrow><mo>+</mo><mrow><mi>A</mi><mo>⁢</mo><mi>B</mi><mo>⁢</mo><mi>C</mi></mrow></mrow><mo>,</mo></mrow></mtd></mtr><mtr><mtd><msub><mi>p</mi><mn>1</mn></msub></mtd><mtd><mrow><mo>=</mo><msub><mi>p</mi><mn>0</mn></msub><mo>−</mo><msub><mi>m</mi><mn>1</mn></msub><mo>=</mo><mrow><mi>B</mi><mo>+</mo><mi>C</mi><mo>−</mo><mrow><mi>A</mi><mo>⁢</mo><mi>B</mi></mrow><mo>−</mo><mrow><mi>A</mi><mo>⁢</mo><mi>C</mi></mrow><mo>−</mo><mrow><mn>2</mn><mo>⁢</mo><mrow><mi>B</mi><mo>⁢</mo><mi>C</mi></mrow></mrow><mo>+</mo><mrow><mn>3</mn><mo>⁢</mo><mrow><mi>A</mi><mo>⁢</mo><mi>B</mi><mo>⁢</mo><mi>C</mi></mrow></mrow></mrow><mo>.</mo></mrow></mtd></mtr></mtable></math></div>
+    </li>
+<li>
+      <p>Select <math xmlns="http://www.w3.org/1998/Math/MathML"><mi>B</mi></math> and save <math xmlns="http://www.w3.org/1998/Math/MathML"><mrow><mo>¬</mo><mi>A</mi><mo>∧</mo><mi>B</mi><mo>∧</mo><mo>¬</mo><mi>C</mi></mrow></math>.</p>
+      <div class="equation"><math xmlns="http://www.w3.org/1998/Math/MathML" display="block"><mtable columnalign="right left"><mtr><mtd><msub><mi>m</mi><mn>2</mn></msub></mtd><mtd><mrow><mo>=</mo><mrow><mi>B</mi><mo>−</mo><mrow><mi>A</mi><mo>⁢</mo><mi>B</mi></mrow><mo>−</mo><mrow><mi>B</mi><mo>⁢</mo><mi>C</mi></mrow><mo>+</mo><mrow><mi>A</mi><mo>⁢</mo><mi>B</mi><mo>⁢</mo><mi>C</mi></mrow></mrow><mo>,</mo></mrow></mtd></mtr><mtr><mtd><msub><mi>p</mi><mn>2</mn></msub></mtd><mtd><mrow><mo>=</mo><msub><mi>p</mi><mn>1</mn></msub><mo>−</mo><msub><mi>m</mi><mn>2</mn></msub><mo>=</mo><mrow><mi>C</mi><mo>−</mo><mrow><mi>A</mi><mo>⁢</mo><mi>C</mi></mrow><mo>−</mo><mrow><mi>B</mi><mo>⁢</mo><mi>C</mi></mrow><mo>+</mo><mrow><mn>2</mn><mo>⁢</mo><mrow><mi>A</mi><mo>⁢</mo><mi>B</mi><mo>⁢</mo><mi>C</mi></mrow></mrow></mrow><mo>.</mo></mrow></mtd></mtr></mtable></math></div>
+    </li>
+<li>
+      <p>Select <math xmlns="http://www.w3.org/1998/Math/MathML"><mi>C</mi></math> and save <math xmlns="http://www.w3.org/1998/Math/MathML"><mrow><mo>¬</mo><mi>A</mi><mo>∧</mo><mo>¬</mo><mi>B</mi><mo>∧</mo><mi>C</mi></mrow></math>.</p>
+      <div class="equation"><math xmlns="http://www.w3.org/1998/Math/MathML" display="block"><mtable columnalign="right left"><mtr><mtd><msub><mi>m</mi><mn>3</mn></msub></mtd><mtd><mrow><mo>=</mo><mrow><mi>C</mi><mo>−</mo><mrow><mi>A</mi><mo>⁢</mo><mi>C</mi></mrow><mo>−</mo><mrow><mi>B</mi><mo>⁢</mo><mi>C</mi></mrow><mo>+</mo><mrow><mi>A</mi><mo>⁢</mo><mi>B</mi><mo>⁢</mo><mi>C</mi></mrow></mrow><mo>,</mo></mrow></mtd></mtr><mtr><mtd><msub><mi>p</mi><mn>3</mn></msub></mtd><mtd><mrow><mo>=</mo><msub><mi>p</mi><mn>2</mn></msub><mo>−</mo><msub><mi>m</mi><mn>3</mn></msub><mo>=</mo><mrow><mi>A</mi><mo>⁢</mo><mi>B</mi><mo>⁢</mo><mi>C</mi></mrow><mo>.</mo></mrow></mtd></mtr></mtable></math></div>
+    </li>
+<li>
+      <p>Select <math xmlns="http://www.w3.org/1998/Math/MathML"><mrow><mi>A</mi><mo>⁢</mo><mi>B</mi><mo>⁢</mo><mi>C</mi></mrow></math> and save <math xmlns="http://www.w3.org/1998/Math/MathML"><mrow><mi>A</mi><mo>∧</mo><mi>B</mi><mo>∧</mo><mi>C</mi></mrow></math>.</p>
+      <div class="equation"><math xmlns="http://www.w3.org/1998/Math/MathML" display="block"><mtable columnalign="right left"><mtr><mtd><msub><mi>m</mi><mn>4</mn></msub></mtd><mtd><mrow><mo>=</mo><mrow><mi>A</mi><mo>⁢</mo><mi>B</mi><mo>⁢</mo><mi>C</mi></mrow><mo>,</mo></mrow></mtd></mtr><mtr><mtd><msub><mi>p</mi><mn>4</mn></msub></mtd><mtd><mrow><mo>=</mo><msub><mi>p</mi><mn>3</mn></msub><mo>−</mo><msub><mi>m</mi><mn>4</mn></msub><mo>=</mo><mn>0</mn><mo>.</mo></mrow></mtd></mtr></mtable></math></div>
+    </li>
+  </ol>
+  <p>The four saved terms yield the original sum bit.</p>
+  <div class="equation"><math xmlns="http://www.w3.org/1998/Math/MathML" display="block"><mtable columnalign="right left"><mtr><mtd><mi>D</mi></mtd><mtd><mrow><mo>=</mo><mrow><mo>(</mo><mrow><mi>A</mi><mo>∧</mo><mo>¬</mo><mi>B</mi><mo>∧</mo><mo>¬</mo><mi>C</mi></mrow><mo>)</mo></mrow><mo>∨</mo><mrow><mo>(</mo><mrow><mo>¬</mo><mi>A</mi><mo>∧</mo><mi>B</mi><mo>∧</mo><mo>¬</mo><mi>C</mi></mrow><mo>)</mo></mrow></mrow></mtd></mtr><mtr><mtd><mrow></mrow></mtd><mtd><mrow><mspace width="1em"></mspace><mo>∨</mo><mrow><mo>(</mo><mrow><mo>¬</mo><mi>A</mi><mo>∧</mo><mo>¬</mo><mi>B</mi><mo>∧</mo><mi>C</mi></mrow><mo>)</mo></mrow><mo>∨</mo><mrow><mo>(</mo><mrow><mi>A</mi><mo>∧</mo><mi>B</mi><mo>∧</mo><mi>C</mi></mrow><mo>)</mo></mrow><mo>.</mo></mrow></mtd></mtr></mtable></math></div>
+</section>
+
+<section id="scope">
+  <h2>5. Scope and implementation</h2>
+  <ul>
+    <li>Keep the full input index set fixed, including inputs absent from the remainder. Each saved term specifies a complete input row.</li>
+    <li>A constant coefficient of +1 selects the all-zero row. The corresponding row polynomial is <math xmlns="http://www.w3.org/1998/Math/MathML"><munder><mo>∏</mo><mrow><mi>i</mi><mo>∈</mo><mi>N</mi></mrow></munder><mrow><mo>(</mo><mn>1</mn><mo>−</mo><msub><mi>x</mi><mi>i</mi></msub><mo>)</mo></mrow></math>.</li>
+    <li>The hypothesis concerns values on <math xmlns="http://www.w3.org/1998/Math/MathML"><msup><mrow><mo>{</mo><mn>0</mn><mo>,</mo><mn>1</mn><mo>}</mo></mrow><mi>n</mi></msup></math>. For example, <math xmlns="http://www.w3.org/1998/Math/MathML"><mrow><mn>2</mn><mo>⁢</mo><mi>A</mi></mrow></math> takes the value 2 at <math xmlns="http://www.w3.org/1998/Math/MathML"><mi>A</mi><mo>=</mo><mn>1</mn></math> and lies outside the theorem.</li>
+    <li>Coefficient arithmetic and zero tests must be exact. Integer arithmetic suffices for polynomials generated by the listed gate translations.</li>
+    <li>A combinational network provides a Boolean function to which the theorem applies. A network with feedback or state requires a specified input/output function before applying the theorem.</li>
+    <li>The output is canonical disjunctive normal form, with one complete term per true row. A smaller gate expression may exist. The row count and coefficient storage can grow exponentially with <math xmlns="http://www.w3.org/1998/Math/MathML"><mi>n</mi></math>.</li>
+  </ul>
+  <p class="verification">The local verification in <code>verify_back_transformation.py</code> checked all 65,814 Boolean functions with zero through four inputs and 525,349 extraction steps using exact arithmetic. It checks the chosen coefficient, the reduced product, the subtraction identity, and the remaining truth-table rows.</p>
+</section>
+  </main>
+  <footer><div class="wrap">AlgebraicBoolean · Formal proof · 6 November 2026</div></footer>
+</body>
+</html>

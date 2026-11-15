@@ -1,0 +1,95 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="color-scheme" content="light">
+  <title>AlgebraicBoolean · Back-transformation proof audit</title>
+  <style>
+    :root {
+      --paper: #fcfbf7;
+      --ink: #202624;
+      --accent: #24564b;
+      --tint: #ecf2ec;
+      --rule: #ccd6ce;
+    }
+    * { box-sizing: border-box; }
+    body {
+      margin: 0;
+      background: var(--paper);
+      color: var(--ink);
+      font: 1.08rem/1.65 Georgia, serif;
+    }
+    .wrap { width: min(47rem, calc(100% - 3rem)); margin-inline: auto; }
+    header { padding: 2.5rem 0 1.65rem; border-top: .36rem solid var(--accent); border-bottom: 1px solid var(--rule); background: var(--tint); }
+    .kicker { margin: 0 0 .5rem; color: var(--accent); font: 700 .76rem/1.4 system-ui, sans-serif; letter-spacing: .1em; text-transform: uppercase; }
+    h1 { margin: 0; font-size: clamp(2rem, 5.5vw, 3.25rem); font-weight: 500; line-height: 1.15; }
+    main { padding-block: 1.8rem 2.4rem; }
+    p { margin: 0 0 .95rem; }
+    ul { margin: 0 0 1.25rem; padding-inline-start: 1.4rem; }
+    li { padding-inline-start: .25rem; margin-bottom: .6rem; }
+    math { font-family: "Cambria Math", "STIX Two Math", "Latin Modern Math", math; }
+    .equation { margin: .4rem 0 1rem; padding: .55rem .75rem; overflow-x: auto; background: var(--tint); border-left: .2rem solid var(--accent); }
+    @media (max-width: 35rem) {
+      .wrap { width: calc(100% - 2rem); }
+      header { padding-top: 1.75rem; }
+    }
+    @media print {
+      body, header, .equation { background: white; }
+      body { font-size: 11pt; }
+      .wrap { width: 100%; }
+      header { padding: .5rem 0 1rem; }
+      h1 { font-size: 25pt; }
+      .equation, li { break-inside: avoid; }
+    }
+  </style>
+</head>
+<body>
+  <header>
+    <div class="wrap">
+      <p class="kicker">AlgebraicBoolean</p>
+      <h1>Back-transformation proof audit</h1>
+    </div>
+  </header>
+  <main class="wrap">
+    <p><strong>I found no counterexample to the back-transformation as stated, and no gap in the proof.</strong> I did find small counterexamples that show exactly why two of your rules matter.</p>
+
+    <p>I checked all <strong>65,814 Boolean functions with up to four inputs</strong> using exact arithmetic. This time I tested <strong>every permitted next choice</strong>, including all ties, for a total of <strong>104,879 distinct transitions</strong>. Every choice had coefficient <math xmlns="http://www.w3.org/1998/Math/MathML"><mo>+</mo><mn>1</mn></math>, selected a true row, and removed exactly that row. Since each resulting polynomial is another state in the checked set, the test covers every possible tie-breaking sequence for those input sizes.</p>
+
+    <p>Two ways to break the algorithm are:</p>
+    <ul>
+      <li><strong>Choose any term with coefficient <math xmlns="http://www.w3.org/1998/Math/MathML"><mo>+</mo><mn>1</mn></math>, ignoring degree.</strong> Take <math xmlns="http://www.w3.org/1998/Math/MathML"><mi>p</mi><mo>=</mo><mn>1</mn><mo>−</mo><mi>A</mi><mo>−</mo><mi>B</mi><mo>+</mo><mi>A</mi><mo>⁢</mo><mi>B</mi></math>. Its only true row is <math xmlns="http://www.w3.org/1998/Math/MathML"><mn>00</mn></math>. The term <math xmlns="http://www.w3.org/1998/Math/MathML"><mi>A</mi><mo>⁢</mo><mi>B</mi></math> has coefficient <math xmlns="http://www.w3.org/1998/Math/MathML"><mo>+</mo><mn>1</mn></math>, but choosing it would emit the false row <math xmlns="http://www.w3.org/1998/Math/MathML"><mn>11</mn></math>. Your lowest-degree rule correctly selects the constant term and extracts <math xmlns="http://www.w3.org/1998/Math/MathML"><mn>00</mn></math>.</li>
+      <li><strong>Choose a term before reducing powers.</strong> Take <math xmlns="http://www.w3.org/1998/Math/MathML"><mi>p</mi><mo>=</mo><mi>A</mi><mo>−</mo><msup><mi>A</mi><mn>2</mn></msup></math>. Every Boolean output is zero, yet the expression still shows a term <math xmlns="http://www.w3.org/1998/Math/MathML"><mo>+</mo><mi>A</mi></math>. Selecting it would emit a false row. Applying your reduction rule first gives <math xmlns="http://www.w3.org/1998/Math/MathML"><mi>A</mi><mo>−</mo><mi>A</mi><mo>=</mo><mn>0</mn></math>, so the algorithm correctly stops.</li>
+    </ul>
+
+    <p>For the <strong>proof audit</strong>, I looked for circular reasoning between “the chosen term identifies a true row” and “the reduced polynomial is determined by its rows.” I checked both claims by a separate algebraic argument.</p>
+
+    <p>Let <math xmlns="http://www.w3.org/1998/Math/MathML"><msub><mi>m</mi><mi>S</mi></msub></math> be the polynomial for the complete row with ones exactly at the indices in <math xmlns="http://www.w3.org/1998/Math/MathML"><mi>S</mi></math>, and let <math xmlns="http://www.w3.org/1998/Math/MathML"><msub><mi>x</mi><mi>T</mi></msub></math> be the monomial using the variables in <math xmlns="http://www.w3.org/1998/Math/MathML"><mi>T</mi></math>. We have the ordinary polynomial identity</p>
+    <div class="equation">
+      <math xmlns="http://www.w3.org/1998/Math/MathML" display="block">
+        <munder><mo>∑</mo><mrow><mi>S</mi><mo>⊇</mo><mi>T</mi></mrow></munder>
+        <msub><mi>m</mi><mi>S</mi></msub><mo>⁡</mo><mo>(</mo><mi>x</mi><mo>)</mo>
+        <mo>=</mo><msub><mi>x</mi><mi>T</mi></msub>
+        <munder><mo>∏</mo><mrow><mi>i</mi><mo>∉</mo><mi>T</mi></mrow></munder>
+        <mo>(</mo><msub><mi>x</mi><mi>i</mi></msub><mo>+</mo>
+        <mo>(</mo><mn>1</mn><mo>−</mo><msub><mi>x</mi><mi>i</mi></msub><mo>)</mo><mo>)</mo>
+        <mo>=</mo><msub><mi>x</mi><mi>T</mi></msub><mo>.</mo>
+      </math>
+    </div>
+    <p>The sum expands all ways of filling in the inputs outside <math xmlns="http://www.w3.org/1998/Math/MathML"><mi>T</mi></math>. Applying this identity to every monomial gives</p>
+    <div class="equation">
+      <math xmlns="http://www.w3.org/1998/Math/MathML" display="block">
+        <mi>p</mi><mo>⁡</mo><mo>(</mo><mi>x</mi><mo>)</mo><mo>=</mo>
+        <munder><mo>∑</mo><mi>S</mi></munder>
+        <mi>p</mi><mo>⁡</mo><mo>(</mo><msub><mi>v</mi><mi>S</mi></msub><mo>)</mo>
+        <msub><mi>m</mi><mi>S</mi></msub><mo>⁡</mo><mo>(</mo><mi>x</mi><mo>)</mo><mo>.</mo>
+      </math>
+    </div>
+    <p>So a reduced Boolean-valued polynomial is exactly the sum of the complete terms for its true rows. If every row is false, that sum is zero.</p>
+
+    <p>Now consider the true rows with the <strong>fewest ones</strong>. Each of their complete terms starts with its own monomial with coefficient <math xmlns="http://www.w3.org/1998/Math/MathML"><mo>+</mo><mn>1</mn></math>, followed only by higher-degree terms. Those first monomials are distinct, so they cannot cancel. This independently confirms your selection rule: <strong>the lowest-degree monomials identify precisely the remaining true rows with the fewest ones.</strong> The removal step then deletes one of those rows, leaving the same argument available for the next step.</p>
+
+    <p>That argument holds for any finite number of inputs. The counterexamples show that reduction and lowest-degree selection do real work in the theorem.</p>
+  </main>
+</body>
+</html>

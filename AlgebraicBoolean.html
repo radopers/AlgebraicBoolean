@@ -1,0 +1,367 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="color-scheme" content="light">
+  <meta name="description" content="AlgebraicBoolean translates Boolean networks into reduced polynomials and recovers their true rows. Learn the method, check the proof, and reproduce the full-adder example.">
+  <title>AlgebraicBoolean · From Boolean networks to polynomials and back</title>
+  <style>
+    :root {
+      --paper: #fcfbf7;
+      --panel: #edf3ed;
+      --ink: #202a27;
+      --muted: #495b54;
+      --green: #23554a;
+      --deep: #183c35;
+      --rule: #cbd8cf;
+    }
+    * { box-sizing: border-box; }
+    html { scroll-behavior: auto; }
+    body { margin: 0; color: var(--ink); background: var(--paper); font: 1.075rem/1.65 system-ui, sans-serif; }
+    .wrap { width: min(53rem, calc(100% - 3rem)); margin-inline: auto; }
+    .skip { position: absolute; left: 1rem; top: .7rem; transform: translateY(-200%); z-index: 1; padding: .55rem .8rem; background: var(--paper); }
+    .skip:focus { transform: none; }
+    .hero { padding: 3.2rem 0 2.7rem; color: var(--paper); background: var(--deep); border-top: .4rem solid #c3d2a4; }
+    .kicker { margin: 0 0 .55rem; color: #e0e9d1; font: 700 .77rem/1.45 system-ui, sans-serif; text-transform: uppercase; letter-spacing: .12em; }
+    h1, h2 { font-family: Georgia, serif; font-weight: 500; line-height: 1.12; }
+    h1 { margin: 0; font-size: clamp(2.55rem, 7vw, 4.7rem); letter-spacing: -.025em; overflow-wrap: anywhere; }
+    .subtitle { margin: .6rem 0 .8rem; font-family: Georgia, serif; font-size: clamp(1.25rem, 3vw, 1.75rem); }
+    .lead { margin-bottom: 0; color: #e5eee7; max-width: 61ch; }
+    .toc { padding: 1.05rem 0 1.15rem; background: var(--panel); border-bottom: 1px solid var(--rule); }
+    .toc p { margin: 0 0 .35rem; color: var(--green); font-size: .77rem; font-weight: 750; text-transform: uppercase; letter-spacing: .08em; }
+    .toc ol { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: .2rem 1.55rem; padding-inline-start: 1.5rem; margin: 0; font-size: .9rem; }
+    .toc li { margin: 0; }
+    a { color: var(--green); text-underline-offset: .17em; }
+    a:focus-visible { outline: 2px solid var(--green); outline-offset: .18rem; }
+    section { margin: 2.4rem 0; scroll-margin-top: 1.2rem; }
+    section + section { padding-top: 1.9rem; border-top: 1px solid var(--rule); }
+    h2 { margin: 0 0 .85rem; font-size: clamp(1.72rem, 4vw, 2.45rem); }
+    h3 { margin: 1.45rem 0 .45rem; font-size: 1.16rem; line-height: 1.35; }
+    p { margin: 0 0 .85rem; max-width: 73ch; }
+    ol, ul { padding-inline-start: 1.45rem; }
+    li { margin-bottom: .5rem; }
+    .overview { display: flex; flex-wrap: wrap; gap: .45rem 1rem; align-items: center; margin: 1.15rem 0; padding: .72rem .9rem; border: 1px solid var(--rule); background: var(--panel); color: var(--green); font-size: .92rem; font-weight: 650; }
+    .statement, .equation { background: var(--panel); border-left: .2rem solid var(--green); }
+    .statement { padding: .7rem .9rem; max-width: none; }
+    .equation { margin: .9rem 0 1rem; padding: .6rem .65rem; overflow-x: auto; }
+    math { font-family: "Cambria Math", "STIX Two Math", "Latin Modern Math", math; }
+    .table-scroll { margin: 1rem 0 1.2rem; overflow-x: auto; }
+    table { width: 100%; border-collapse: collapse; text-align: left; font-size: .94rem; }
+    caption { text-align: left; padding: 0 0 .35rem; color: var(--muted); font-size: .88rem; font-weight: 650; }
+    th, td { border-bottom: 1px solid var(--rule); padding: .44rem .65rem; vertical-align: top; }
+    thead th { background: var(--panel); color: var(--deep); }
+    .truth :is(th, td):not([scope="row"]) { text-align: center; }
+    .trace td { white-space: nowrap; }
+    .methods th[scope="row"] { min-width: 7rem; }
+    code { font: .91em/1.5 ui-monospace, Consolas, monospace; }
+    pre { overflow-x: auto; margin: 1rem 0; padding: .85rem 1rem; border: 1px solid var(--rule); background: #f3f5ef; font-size: .92rem; }
+    pre code { font-size: 1em; }
+    .resources { display: grid; gap: .5rem; padding: 0; list-style: none; }
+    .resources li { margin: 0; padding: .6rem .8rem; border: 1px solid var(--rule); }
+    .resources a { font-weight: 700; }
+    .resources span { display: block; color: var(--muted); font-size: .87rem; }
+    footer { padding: 1.2rem 0 1.6rem; border-top: 1px solid var(--rule); color: var(--muted); font-size: .87rem; }
+    footer p { margin-bottom: .45rem; }
+    @media (max-width: 35rem) {
+      .wrap { width: calc(100% - 2rem); }
+      .hero { padding: 2.2rem 0 1.8rem; }
+      .toc ol { grid-template-columns: 1fr; }
+      th, td { padding-inline: .45rem; }
+      section { margin: 1.8rem 0; }
+      section + section { padding-top: 1.4rem; }
+    }
+    @media print {
+      body, .hero, .equation, .statement, pre { background: white; color: black; }
+      body { font-size: 10.5pt; }
+      .wrap { width: 100%; }
+      .hero { padding: .5rem 0 .8rem; }
+      .lead, .kicker { color: #222; }
+      h1 { font-size: 30pt; }
+      h2 { font-size: 18pt; }
+      h2, h3, caption { break-after: avoid; }
+      .toc, .skip { display: none; }
+      .equation, .statement, tr { break-inside: avoid; }
+      section { margin: 1.15rem 0; }
+      section + section { padding-top: .8rem; }
+    }
+  </style>
+</head>
+<body>
+  <a class="skip" href="#article">Skip to article</a>
+  <header class="hero">
+    <div class="wrap">
+      <p class="kicker">From the 2013 notes · November 2026 edition · Method developed by Roland Adorni</p>
+      <h1>AlgebraicBoolean</h1>
+      <p class="subtitle">From Boolean networks to polynomials and back</p>
+      <p class="lead">Translate logic gates into ordinary arithmetic, reduce repeated variables, and recover exactly the input rows that make the result true.</p>
+    </div>
+  </header>
+  <nav class="toc" aria-label="Contents">
+    <div class="wrap">
+      <p>Contents</p>
+      <ol>
+        <li><a href="#origin">Where the method began</a></li>
+        <li><a href="#notation">Gate notation and reduction</a></li>
+        <li><a href="#full-adder">The full-adder example</a></li>
+        <li><a href="#back-transformation">Back-transformation</a></li>
+        <li><a href="#correctness">Correctness, proof, and audit</a></li>
+        <li><a href="#multiplication">Fast multiplication</a></li>
+        <li><a href="#signed">The signed representation</a></li>
+        <li><a href="#implementation">Implementation choices</a></li>
+      </ol>
+    </div>
+  </nav>
+  <main class="wrap" id="article">
+    <article aria-label="AlgebraicBoolean">
+
+<section id="origin" aria-labelledby="origin-title">
+  <h2 id="origin-title">1. Where the method began</h2>
+  <p>Rado’s 2013 notes grew out of a question about optimal Golomb rulers. Could a search for distances be expressed through constraints on binary digits, then worked through using ordinary arithmetic? AlgebraicBoolean represents each signal by a polynomial, carries out the logic in that form, and converts the result back into a Boolean expression.</p>
+  <p>The method describes the same finite Boolean functions as a truth table or a gate network. Its distinctive working form is an expanded polynomial with a simple rule for repeated variables. That gives us a way to calculate symbolically, recognize equivalent outputs, and recover the assignments that make an output true.</p>
+  <div class="overview" aria-label="Calculation workflow">
+    <span>Boolean network</span><span aria-hidden="true">→</span>
+    <span>Reduced polynomial</span><span aria-hidden="true">→</span>
+    <span>Complete true rows</span>
+  </div>
+</section>
+
+<section id="notation" aria-labelledby="notation-title">
+  <h2 id="notation-title">2. From Boolean gates to polynomials</h2>
+  <p>Use 0 for FALSE and 1 for TRUE. Uppercase letters such as <var>A</var> name Boolean inputs, and lowercase letters such as <var>a</var> name their algebraic variables. Let <var>p</var> and <var>q</var> represent two signals. Translate each gate using the following formulas.</p>
+  <div class="table-scroll">
+    <table>
+      <caption>Gate translations in the original 0/1 encoding</caption>
+      <thead><tr><th scope="col">Gate</th><th scope="col">Boolean notation</th><th scope="col">Polynomial</th></tr></thead>
+      <tbody>
+        <tr><th scope="row">NOT</th><td><math xmlns="http://www.w3.org/1998/Math/MathML"><mo>¬</mo><mi>P</mi></math></td><td><math xmlns="http://www.w3.org/1998/Math/MathML"><mn>1</mn><mo>−</mo><mi>p</mi></math></td></tr>
+        <tr><th scope="row">AND</th><td><math xmlns="http://www.w3.org/1998/Math/MathML"><mi>P</mi><mo>∧</mo><mi>Q</mi></math></td><td><math xmlns="http://www.w3.org/1998/Math/MathML"><mrow><mi>p</mi><mo>⁢</mo><mi>q</mi></mrow></math></td></tr>
+        <tr><th scope="row">OR</th><td><math xmlns="http://www.w3.org/1998/Math/MathML"><mi>P</mi><mo>∨</mo><mi>Q</mi></math></td><td><math xmlns="http://www.w3.org/1998/Math/MathML"><mi>p</mi><mo>+</mo><mi>q</mi><mo>−</mo><mrow><mi>p</mi><mo>⁢</mo><mi>q</mi></mrow></math></td></tr>
+        <tr><th scope="row">XOR</th><td><math xmlns="http://www.w3.org/1998/Math/MathML"><mi>P</mi><mo>⊕</mo><mi>Q</mi></math></td><td><math xmlns="http://www.w3.org/1998/Math/MathML"><mi>p</mi><mo>+</mo><mi>q</mi><mo>−</mo><mrow><mn>2</mn><mo>⁢</mo><mi>p</mi><mo>⁢</mo><mi>q</mi></mrow></math></td></tr>
+      </tbody>
+    </table>
+  </div>
+  <div class="table-scroll">
+    <table class="truth">
+      <caption>Checking all possible gate inputs</caption>
+      <thead><tr><th scope="col"><var>p</var></th><th scope="col"><var>q</var></th><th scope="col">NOT <var>p</var></th><th scope="col">AND</th><th scope="col">OR</th><th scope="col">XOR</th></tr></thead>
+      <tbody>
+          <tr><td>0</td><td>0</td><td>1</td><td>0</td><td>0</td><td>0</td></tr>
+          <tr><td>0</td><td>1</td><td>1</td><td>0</td><td>1</td><td>1</td></tr>
+          <tr><td>1</td><td>0</td><td>0</td><td>0</td><td>1</td><td>1</td></tr>
+          <tr><td>1</td><td>1</td><td>0</td><td>1</td><td>1</td><td>0</td></tr>
+      </tbody>
+    </table>
+  </div>
+  <p>The coefficients use ordinary arithmetic. The 2 in the XOR formula is essential. Start with a variable for each input and a constant for each fixed signal. Process the gates in an order in which each gate’s inputs are already available. If a network has several outputs, keep a polynomial for each one.</p>
+
+  <h3>Reduce powers after multiplication</h3>
+  <p>Expand the products, replace each positive power of an input variable by that variable, and collect terms with the same variables. The power rule preserves values at both Boolean inputs.</p>
+  <div class="equation"><math xmlns="http://www.w3.org/1998/Math/MathML" display="block"><msup><msub><mi>x</mi><mi>i</mi></msub><mi>k</mi></msup><mo>→</mo><msub><mi>x</mi><mi>i</mi></msub><mo>,</mo><mrow><mi>k</mi><mo>≥</mo><mn>1</mn></mrow><mo>.</mo></math></div>
+  <p>For example, the contradiction <var>A</var> AND NOT <var>A</var> reduces to zero.</p>
+  <div class="equation"><math xmlns="http://www.w3.org/1998/Math/MathML" display="block"><mrow><mi>a</mi><mo>⁢</mo><mrow><mo>(</mo><mn>1</mn><mo>−</mo><mi>a</mi><mo>)</mo></mrow></mrow><mo>=</mo><mi>a</mi><mo>−</mo><msup><mi>a</mi><mn>2</mn></msup><mo>→</mo><mi>a</mi><mo>−</mo><mi>a</mi><mo>=</mo><mn>0</mn><mo>.</mo></math></div>
+  <p>The reduction rule expresses equality on Boolean inputs. Ordinary real inputs outside 0 and 1 may give different values before and after reduction.</p>
+  <p>Fix the complete input set <var>N</var> with <var>n</var> inputs. A subset <var>S</var> of <var>N</var> identifies the monomial <math xmlns="http://www.w3.org/1998/Math/MathML"><msub><mi>x</mi><mi>S</mi></msub></math>, the product of the variables in <var>S</var>. The empty subset represents 1. Write <var>x</var> for the full input vector. Every reduced polynomial has the form</p>
+  <div class="equation"><math xmlns="http://www.w3.org/1998/Math/MathML" display="block"><mrow><mi>p</mi><mo>⁡</mo><mrow><mo>(</mo><mi>x</mi><mo>)</mo></mrow></mrow><mo>=</mo><munder><mo>∑</mo><mrow><mi>S</mi><mo>⊆</mo><mi>N</mi></mrow></munder><mrow><msub><mi>c</mi><mi>S</mi></msub><mo>⁢</mo><msub><mi>x</mi><mi>S</mi></msub></mrow><mo>.</mo></math></div>
+  <p>There are <math xmlns="http://www.w3.org/1998/Math/MathML"><msup><mn>2</mn><mi>n</mi></msup></math> possible monomials, including the constant. Multiplication combines their sets of variables by union. For example, <math xmlns="http://www.w3.org/1998/Math/MathML"><mrow><mi mathvariant="normal">red</mi><mo>⁡</mo><mrow><mo>(</mo><mrow><mrow><mo>(</mo><mrow><mi>a</mi><mo>⁢</mo><mi>b</mi></mrow><mo>)</mo></mrow><mo>⁢</mo><mrow><mo>(</mo><mrow><mi>b</mi><mo>⁢</mo><mi>c</mi></mrow><mo>)</mo></mrow></mrow><mo>)</mo></mrow></mrow><mo>=</mo><mrow><mi>a</mi><mo>⁢</mo><mi>b</mi><mo>⁢</mo><mi>c</mi></mrow></math>. With one bit per input variable, the resulting monomial’s mask is the bitwise OR of the two input masks.</p>
+  <p>Negation is the arithmetic operation <math xmlns="http://www.w3.org/1998/Math/MathML"><mn>1</mn><mo>−</mo><mi>p</mi></math>. In a collected Boolean-valued polynomial, the constant coefficient toggles between 0 and 1 and the other coefficients change sign. The number of nonzero terms changes by one.</p>
+</section>
+
+<section id="full-adder" aria-labelledby="adder-title">
+  <h2 id="adder-title">3. Work a network through the forward transformation</h2>
+  <p>A full adder takes bits <var>A</var> and <var>B</var> and a carry-in <var>C</var>. Its sum bit <var>D</var> is 1 on odd parity. Its carry-out <var>E</var> is 1 when at least two inputs are 1.</p>
+  <div class="equation"><math xmlns="http://www.w3.org/1998/Math/MathML" display="block"><mtable columnalign="right left"><mtr><mtd><mi>D</mi></mtd><mtd><mrow><mo>=</mo><mi>A</mi><mo>⊕</mo><mi>B</mi><mo>⊕</mo><mi>C</mi><mo>,</mo></mrow></mtd></mtr><mtr><mtd><mi>E</mi></mtd><mtd><mrow><mo>=</mo><mrow><mo>(</mo><mi>A</mi><mo>∧</mo><mi>B</mi><mo>)</mo></mrow><mo>∨</mo><mrow><mo>(</mo><mi>A</mi><mo>∧</mo><mi>C</mi><mo>)</mo></mrow><mo>∨</mo><mrow><mo>(</mo><mi>B</mi><mo>∧</mo><mi>C</mi><mo>)</mo></mrow><mo>.</mo></mrow></mtd></mtr></mtable></math></div>
+  <p>First translate <var>A</var> XOR <var>B</var> to <math xmlns="http://www.w3.org/1998/Math/MathML"><mi>t</mi><mo>=</mo><mi>a</mi><mo>+</mo><mi>b</mi><mo>−</mo><mrow><mn>2</mn><mo>⁢</mo><mrow><mi>a</mi><mo>⁢</mo><mi>b</mi></mrow></mrow></math>. Applying the XOR rule to <var>t</var> and <var>c</var> gives the sum polynomial <var>d</var>. Applying the AND and OR rules to the carry expression gives <var>e</var>.</p>
+  <div class="equation"><math xmlns="http://www.w3.org/1998/Math/MathML" display="block"><mtable columnalign="right left"><mtr><mtd><mi>d</mi></mtd><mtd><mrow><mo>=</mo><mi>t</mi><mo>+</mo><mi>c</mi><mo>−</mo><mrow><mn>2</mn><mo>⁢</mo><mi>t</mi><mo>⁢</mo><mi>c</mi></mrow><mo>=</mo><mrow><mi>a</mi><mo>+</mo><mi>b</mi><mo>+</mo><mi>c</mi><mo>−</mo><mrow><mn>2</mn><mo>⁢</mo><mrow><mi>a</mi><mo>⁢</mo><mi>b</mi></mrow></mrow><mo>−</mo><mrow><mn>2</mn><mo>⁢</mo><mrow><mi>a</mi><mo>⁢</mo><mi>c</mi></mrow></mrow><mo>−</mo><mrow><mn>2</mn><mo>⁢</mo><mrow><mi>b</mi><mo>⁢</mo><mi>c</mi></mrow></mrow><mo>+</mo><mrow><mn>4</mn><mo>⁢</mo><mrow><mi>a</mi><mo>⁢</mo><mi>b</mi><mo>⁢</mo><mi>c</mi></mrow></mrow></mrow><mo>,</mo></mrow></mtd></mtr><mtr><mtd><mi>e</mi></mtd><mtd><mrow><mo>=</mo><mrow><mrow><mi>a</mi><mo>⁢</mo><mi>b</mi></mrow><mo>+</mo><mrow><mi>a</mi><mo>⁢</mo><mi>c</mi></mrow><mo>+</mo><mrow><mi>b</mi><mo>⁢</mo><mi>c</mi></mrow><mo>−</mo><mrow><mn>2</mn><mo>⁢</mo><mrow><mi>a</mi><mo>⁢</mo><mi>b</mi><mo>⁢</mo><mi>c</mi></mrow></mrow></mrow><mo>.</mo></mrow></mtd></mtr></mtable></math></div>
+  <div class="table-scroll">
+    <table class="truth">
+      <caption>Full-adder outputs in <var>A</var>, <var>B</var>, <var>C</var> input order</caption>
+      <thead><tr><th scope="col"><var>A</var></th><th scope="col"><var>B</var></th><th scope="col"><var>C</var></th><th scope="col">Sum <var>D</var></th><th scope="col">Carry <var>E</var></th></tr></thead>
+      <tbody>
+          <tr><td>0</td><td>0</td><td>0</td><td>0</td><td>0</td></tr>
+          <tr><td>0</td><td>0</td><td>1</td><td>1</td><td>0</td></tr>
+          <tr><td>0</td><td>1</td><td>0</td><td>1</td><td>0</td></tr>
+          <tr><td>0</td><td>1</td><td>1</td><td>0</td><td>1</td></tr>
+          <tr><td>1</td><td>0</td><td>0</td><td>1</td><td>0</td></tr>
+          <tr><td>1</td><td>0</td><td>1</td><td>0</td><td>1</td></tr>
+          <tr><td>1</td><td>1</td><td>0</td><td>0</td><td>1</td></tr>
+          <tr><td>1</td><td>1</td><td>1</td><td>1</td><td>1</td></tr>
+      </tbody>
+    </table>
+  </div>
+  <p>For an arithmetic check, the two outputs satisfy <math xmlns="http://www.w3.org/1998/Math/MathML"><mi>a</mi><mo>+</mo><mi>b</mi><mo>+</mo><mi>c</mi><mo>=</mo><mi>d</mi><mo>+</mo><mrow><mn>2</mn><mo>⁢</mo><mi>e</mi></mrow></math>. In the next section we recover the Boolean sum expression from its reduced polynomial.</p>
+</section>
+
+<section id="back-transformation" aria-labelledby="back-title">
+  <h2 id="back-title">4. Recover the Boolean expression</h2>
+  <p>The back-transformation removes one true input row at a time. Start with the reduced polynomial for the output of interest and keep the original input list throughout.</p>
+  <ol class="procedure">
+    <li><strong>Select a term.</strong> Among the nonzero terms, choose one with the fewest variables. Break ties in any order. Its coefficient will be +1.</li>
+    <li><strong>Read its row.</strong> Give each variable in the selected term value 1 and give every other input value 0. The constant term selects the all-zero row.</li>
+    <li><strong>Save a complete AND term.</strong> Use each input once, positively for a 1 and negated for a 0. For example, with inputs <var>A</var>, <var>B</var>, <var>C</var>, selecting <var>a</var> gives <math xmlns="http://www.w3.org/1998/Math/MathML"><mi>A</mi><mo>∧</mo><mo>¬</mo><mi>B</mi><mo>∧</mo><mo>¬</mo><mi>C</mi></math>. Its algebraic row polynomial is <math xmlns="http://www.w3.org/1998/Math/MathML"><mrow><mi>a</mi><mo>⁢</mo><mrow><mo>(</mo><mn>1</mn><mo>−</mo><mi>b</mi><mo>)</mo></mrow><mo>⁢</mo><mrow><mo>(</mo><mn>1</mn><mo>−</mo><mi>c</mi><mo>)</mo></mrow></mrow></math>.</li>
+    <li><strong>Remove that row.</strong> If <var>m</var> is the row polynomial, replace <var>p</var> by <math xmlns="http://www.w3.org/1998/Math/MathML"><mrow><mi mathvariant="normal">red</mi><mo>⁡</mo><mrow><mo>(</mo><mrow><mi>p</mi><mo>⁢</mo><mrow><mo>(</mo><mn>1</mn><mo>−</mo><mi>m</mi><mo>)</mo></mrow></mrow><mo>)</mo></mrow></mrow></math>. In Boolean terms, this is AND with the inverse of the complete term just saved.</li>
+    <li><strong>Repeat until the remainder is zero.</strong> OR the saved terms together. An empty list gives FALSE.</li>
+  </ol>
+  <p>In symbols, <math xmlns="http://www.w3.org/1998/Math/MathML"><msub><mi>v</mi><mi>S</mi></msub></math> is the row with ones at the indices in <var>S</var>. The complete row polynomial and the update are</p>
+  <div class="equation"><math xmlns="http://www.w3.org/1998/Math/MathML" display="block"><mtable columnalign="right left"><mtr><mtd><mrow><msub><mi>m</mi><mi>S</mi></msub><mo>⁡</mo><mrow><mo>(</mo><mi>x</mi><mo>)</mo></mrow></mrow></mtd><mtd><mrow><mo>=</mo><munder><mo>∏</mo><mrow><mi>i</mi><mo>∈</mo><mi>S</mi></mrow></munder><msub><mi>x</mi><mi>i</mi></msub><munder><mo>∏</mo><mrow><mi>j</mi><mo>∈</mo><mi>N</mi><mo>∖</mo><mi>S</mi></mrow></munder><mrow><mo>(</mo><mn>1</mn><mo>−</mo><msub><mi>x</mi><mi>j</mi></msub><mo>)</mo></mrow><mo>,</mo></mrow></mtd></mtr><mtr><mtd><msub><mi>p</mi><mtext>new</mtext></msub></mtd><mtd><mrow><mo>=</mo><mrow><mi mathvariant="normal">red</mi><mo>⁡</mo><mrow><mo>(</mo><mrow><mi>p</mi><mo>⁢</mo><mrow><mo>(</mo><mn>1</mn><mo>−</mo><msub><mi>m</mi><mi>S</mi></msub><mo>)</mo></mrow></mrow><mo>)</mo></mrow></mrow><mo>.</mo></mrow></mtd></mtr></mtable></math></div>
+  <p>For the full adder’s sum bit, start with <math xmlns="http://www.w3.org/1998/Math/MathML"><msub><mi>p</mi><mn>0</mn></msub><mo>=</mo><mrow><mi>a</mi><mo>+</mo><mi>b</mi><mo>+</mo><mi>c</mi><mo>−</mo><mrow><mn>2</mn><mo>⁢</mo><mrow><mi>a</mi><mo>⁢</mo><mi>b</mi></mrow></mrow><mo>−</mo><mrow><mn>2</mn><mo>⁢</mo><mrow><mi>a</mi><mo>⁢</mo><mi>c</mi></mrow></mrow><mo>−</mo><mrow><mn>2</mn><mo>⁢</mo><mrow><mi>b</mi><mo>⁢</mo><mi>c</mi></mrow></mrow><mo>+</mo><mrow><mn>4</mn><mo>⁢</mo><mrow><mi>a</mi><mo>⁢</mo><mi>b</mi><mo>⁢</mo><mi>c</mi></mrow></mrow></mrow></math>. Choosing <var>a</var> first is one valid tie choice. In the first pass, the row polynomial expands to <math xmlns="http://www.w3.org/1998/Math/MathML"><mi>a</mi><mo>−</mo><mrow><mi>a</mi><mo>⁢</mo><mi>b</mi></mrow><mo>−</mo><mrow><mi>a</mi><mo>⁢</mo><mi>c</mi></mrow><mo>+</mo><mrow><mi>a</mi><mo>⁢</mo><mi>b</mi><mo>⁢</mo><mi>c</mi></mrow></math>.</p>
+  <div class="table-scroll">
+    <table class="trace">
+      <caption>Back-transformation of the full-adder sum</caption>
+      <thead><tr><th scope="col">Selected term</th><th scope="col">Input row</th><th scope="col">Saved Boolean term</th><th scope="col">New remainder</th></tr></thead>
+      <tbody>
+        <tr><th scope="row"><math xmlns="http://www.w3.org/1998/Math/MathML"><mi>a</mi></math></th><td><code>100</code></td><td><math xmlns="http://www.w3.org/1998/Math/MathML"><mi>A</mi><mo>∧</mo><mo>¬</mo><mi>B</mi><mo>∧</mo><mo>¬</mo><mi>C</mi></math></td><td><math xmlns="http://www.w3.org/1998/Math/MathML"><msub><mi>p</mi><mn>1</mn></msub><mo>=</mo><mrow><mi>b</mi><mo>+</mo><mi>c</mi><mo>−</mo><mrow><mi>a</mi><mo>⁢</mo><mi>b</mi></mrow><mo>−</mo><mrow><mi>a</mi><mo>⁢</mo><mi>c</mi></mrow><mo>−</mo><mrow><mn>2</mn><mo>⁢</mo><mrow><mi>b</mi><mo>⁢</mo><mi>c</mi></mrow></mrow><mo>+</mo><mrow><mn>3</mn><mo>⁢</mo><mrow><mi>a</mi><mo>⁢</mo><mi>b</mi><mo>⁢</mo><mi>c</mi></mrow></mrow></mrow></math></td></tr>
+        <tr><th scope="row"><math xmlns="http://www.w3.org/1998/Math/MathML"><mi>b</mi></math></th><td><code>010</code></td><td><math xmlns="http://www.w3.org/1998/Math/MathML"><mo>¬</mo><mi>A</mi><mo>∧</mo><mi>B</mi><mo>∧</mo><mo>¬</mo><mi>C</mi></math></td><td><math xmlns="http://www.w3.org/1998/Math/MathML"><msub><mi>p</mi><mn>2</mn></msub><mo>=</mo><mrow><mi>c</mi><mo>−</mo><mrow><mi>a</mi><mo>⁢</mo><mi>c</mi></mrow><mo>−</mo><mrow><mi>b</mi><mo>⁢</mo><mi>c</mi></mrow><mo>+</mo><mrow><mn>2</mn><mo>⁢</mo><mrow><mi>a</mi><mo>⁢</mo><mi>b</mi><mo>⁢</mo><mi>c</mi></mrow></mrow></mrow></math></td></tr>
+        <tr><th scope="row"><math xmlns="http://www.w3.org/1998/Math/MathML"><mi>c</mi></math></th><td><code>001</code></td><td><math xmlns="http://www.w3.org/1998/Math/MathML"><mo>¬</mo><mi>A</mi><mo>∧</mo><mo>¬</mo><mi>B</mi><mo>∧</mo><mi>C</mi></math></td><td><math xmlns="http://www.w3.org/1998/Math/MathML"><msub><mi>p</mi><mn>3</mn></msub><mo>=</mo><mrow><mi>a</mi><mo>⁢</mo><mi>b</mi><mo>⁢</mo><mi>c</mi></mrow></math></td></tr>
+        <tr><th scope="row"><math xmlns="http://www.w3.org/1998/Math/MathML"><mrow><mi>a</mi><mo>⁢</mo><mi>b</mi><mo>⁢</mo><mi>c</mi></mrow></math></th><td><code>111</code></td><td><math xmlns="http://www.w3.org/1998/Math/MathML"><mi>A</mi><mo>∧</mo><mi>B</mi><mo>∧</mo><mi>C</mi></math></td><td><math xmlns="http://www.w3.org/1998/Math/MathML"><msub><mi>p</mi><mn>4</mn></msub><mo>=</mo><mn>0</mn></math></td></tr>
+      </tbody>
+    </table>
+  </div>
+  <p>The recovered expression is the OR of the four saved terms.</p>
+  <div class="equation"><math xmlns="http://www.w3.org/1998/Math/MathML" display="block"><mtable columnalign="right left"><mtr><mtd><mi>D</mi></mtd><mtd><mrow><mo>=</mo><mrow><mo>(</mo><mi>A</mi><mo>∧</mo><mo>¬</mo><mi>B</mi><mo>∧</mo><mo>¬</mo><mi>C</mi><mo>)</mo></mrow><mo>∨</mo><mrow><mo>(</mo><mo>¬</mo><mi>A</mi><mo>∧</mo><mi>B</mi><mo>∧</mo><mo>¬</mo><mi>C</mi><mo>)</mo></mrow></mrow></mtd></mtr><mtr><mtd><mrow></mrow></mtd><mtd><mrow><mo>∨</mo><mrow><mo>(</mo><mo>¬</mo><mi>A</mi><mo>∧</mo><mo>¬</mo><mi>B</mi><mo>∧</mo><mi>C</mi><mo>)</mo></mrow><mo>∨</mo><mrow><mo>(</mo><mi>A</mi><mo>∧</mo><mi>B</mi><mo>∧</mo><mi>C</mi><mo>)</mo></mrow><mo>.</mo></mrow></mtd></mtr></mtable></math></div>
+  <p>Its four terms specify exactly the four rows with sum bit 1. This form is called <em>canonical disjunctive normal form</em>. It gives the full set of true assignments, which can also be expressed in a shorter form such as the original XOR network.</p>
+
+  <h3>Use an output as a constraint</h3>
+  <p>When the aim is to find inputs satisfying several conditions, build a signal that is true precisely when all the conditions hold. For a signal required to be 1, use its polynomial. For a signal required to be 0, use its complement. Multiply the conditions and reduce, then extract the true rows of the product.</p>
+  <p>For example, the full-adder condition <math xmlns="http://www.w3.org/1998/Math/MathML"><mi>D</mi><mo>=</mo><mn>1</mn></math>, <math xmlns="http://www.w3.org/1998/Math/MathML"><mi>E</mi><mo>=</mo><mn>0</mn></math> has polynomial <math xmlns="http://www.w3.org/1998/Math/MathML"><mrow><mi>d</mi><mo>⁢</mo><mrow><mo>(</mo><mn>1</mn><mo>−</mo><mi>e</mi><mo>)</mo></mrow></mrow></math>. Its true rows are <code>100</code>, <code>010</code>, and <code>001</code>. A zero reduced polynomial means that no Boolean assignment satisfies the combined condition.</p>
+</section>
+
+<section id="correctness" aria-labelledby="correctness-title">
+  <h2 id="correctness-title">5. Why the back-transformation works</h2>
+  <p class="statement"><strong>The guarantee.</strong> For any reduced polynomial that outputs 0 or 1 at every Boolean input, every minimum-degree choice has coefficient +1. The process extracts each true row once and terminates in exactly as many steps as there are true rows, at most <math xmlns="http://www.w3.org/1998/Math/MathML"><msup><mn>2</mn><mi>n</mi></msup></math>.</p>
+  <ol>
+    <li><strong>The selected coefficient is the value of its row.</strong> At <math xmlns="http://www.w3.org/1998/Math/MathML"><msub><mi>v</mi><mi>S</mi></msub></math>, a monomial <math xmlns="http://www.w3.org/1998/Math/MathML"><msub><mi>x</mi><mi>T</mi></msub></math> survives exactly when <math xmlns="http://www.w3.org/1998/Math/MathML"><mi>T</mi><mo>⊆</mo><mi>S</mi></math>. For a selected support <var>S</var>, every proper subset has lower degree, so its coefficient is zero. Thus <math xmlns="http://www.w3.org/1998/Math/MathML"><mrow><mi>p</mi><mo>⁡</mo><mrow><mo>(</mo><msub><mi>v</mi><mi>S</mi></msub><mo>)</mo></mrow></mrow><mo>=</mo><munder><mo>∑</mo><mrow><mi>T</mi><mo>⊆</mo><mi>S</mi></mrow></munder><msub><mi>c</mi><mi>T</mi></msub><mo>=</mo><msub><mi>c</mi><mi>S</mi></msub></math>. A nonzero coefficient equal to a Boolean output must be 1.</li>
+    <li><strong>The update changes one row.</strong> <math xmlns="http://www.w3.org/1998/Math/MathML"><msub><mi>m</mi><mi>S</mi></msub></math> equals 1 at <math xmlns="http://www.w3.org/1998/Math/MathML"><msub><mi>v</mi><mi>S</mi></msub></math> and 0 everywhere else. Multiplying by <math xmlns="http://www.w3.org/1998/Math/MathML"><mn>1</mn><mo>−</mo><msub><mi>m</mi><mi>S</mi></msub></math> clears the selected row and preserves all others. Reduction preserves those values, so the remainder is again Boolean-valued.</li>
+    <li><strong>All-zero outputs force a zero polynomial.</strong> If a nonzero reduced polynomial had all-zero outputs, evaluating it at the row for a minimum-degree term would produce its nonzero coefficient. That is a contradiction. The same argument applied to the difference of two reduced polynomials establishes uniqueness of their reduced representation.</li>
+    <li><strong>The saved rows give the original function.</strong> Each pass removes one true row. When all have been removed, the remainder is zero and the OR of the saved terms gives exactly the original true rows.</li>
+  </ol>
+  <p>The proof applies to any finite Boolean input count and to each output of a combinational network. It relies on power reduction, collecting like terms, exact arithmetic, and the minimum-degree selection rule.</p>
+
+  <h3>What the audit tried to break</h3>
+  <p>For <math xmlns="http://www.w3.org/1998/Math/MathML"><mi>p</mi><mo>=</mo><mn>1</mn><mo>−</mo><mi>a</mi><mo>−</mo><mi>b</mi><mo>+</mo><mrow><mi>a</mi><mo>⁢</mo><mi>b</mi></mrow></math>, the term <math xmlns="http://www.w3.org/1998/Math/MathML"><mrow><mi>a</mi><mo>⁢</mo><mi>b</mi></mrow></math> has coefficient +1 but would incorrectly select <code>11</code>. Minimum-degree selection gives the constant and correctly extracts <code>00</code>. For <math xmlns="http://www.w3.org/1998/Math/MathML"><mi>p</mi><mo>=</mo><mi>a</mi><mo>−</mo><msup><mi>a</mi><mn>2</mn></msup></math>, choosing a term before reducing would also fail. Reduction gives zero, matching every row.</p>
+  <p>The audit checked all 65,814 Boolean functions with zero through four inputs, including all 104,879 distinct legal transitions across every tied choice. It also checked the reasoning independently by expanding a polynomial as the sum of its true-row terms.</p>
+  <ul class="resources" aria-label="Proof and audit pages">
+    <li><a href="BackTransformationProofFormal.html">Formal proof</a><span>The theorem, notation, and complete derivation</span></li>
+    <li><a href="BackTransformationProof.html">Plain-language proof</a><span>The same argument explained step by step</span></li>
+    <li><a href="BackTransformationProofAudit.html">Proof audit</a><span>Counterexample search and the independent argument</span></li>
+  </ul>
+
+  <h3>Subtract the extracted row directly</h3>
+  <p>At the selected row, both <math xmlns="http://www.w3.org/1998/Math/MathML"><mrow><mi>p</mi><mo>⁢</mo><msub><mi>m</mi><mi>S</mi></msub></mrow></math> and <math xmlns="http://www.w3.org/1998/Math/MathML"><msub><mi>m</mi><mi>S</mi></msub></math> equal 1. At every other row both equal 0. By uniqueness, the reduced product equals the expanded row polynomial. Therefore</p>
+  <div class="equation"><math xmlns="http://www.w3.org/1998/Math/MathML" display="block"><mrow><mi mathvariant="normal">red</mi><mo>⁡</mo><mrow><mo>(</mo><mrow><mi>p</mi><mo>⁢</mo><mrow><mo>(</mo><mn>1</mn><mo>−</mo><msub><mi>m</mi><mi>S</mi></msub><mo>)</mo></mrow></mrow><mo>)</mo></mrow></mrow><mo>=</mo><mi>p</mi><mo>−</mo><msub><mi>m</mi><mi>S</mi></msub><mo>.</mo></math></div>
+  <p>This avoids multiplying the entire remainder by the inverse. Expand the row polynomial and subtract it term by term. Its leading monomial is exactly the selected term with coefficient +1. All other monomials contain additional variables, so only higher-degree coefficients change. A scan in increasing degree can continue forward, provided it accounts for newly nonzero higher-degree terms.</p>
+</section>
+
+<section id="multiplication" aria-labelledby="multiplication-title">
+  <h2 id="multiplication-title">6. Multiply without expanding every pair of terms</h2>
+  <p>With <var>k</var> nonzero terms in one operand and <var>l</var> in the other, direct multiplication visits at most <math xmlns="http://www.w3.org/1998/Math/MathML"><mrow><mi>k</mi><mo>⁢</mo><mi>l</mi></mrow></math> term pairs. For each pair, multiply the coefficients and add the result to the coefficient indexed by the union of the variable sets. With dense operands on <var>n</var> inputs, this can take <math xmlns="http://www.w3.org/1998/Math/MathML"><mrow><mi>O</mi><mo>⁡</mo><mrow><mo>(</mo><msup><mn>4</mn><mi>n</mi></msup><mo>)</mo></mrow></mrow></math> arithmetic operations.</p>
+  <p>The faster dense method changes the representation temporarily. The <strong>subset zeta transform</strong> maps the coefficient array <var>c</var> to the polynomial’s values at all Boolean input rows. The <strong>subset Möbius transform</strong> reverses that map.</p>
+  <div class="equation"><math xmlns="http://www.w3.org/1998/Math/MathML" display="block"><mtable columnalign="right left"><mtr><mtd><msub><mi>z</mi><mi>S</mi></msub></mtd><mtd><mrow><mo>=</mo><mrow><mi>p</mi><mo>⁡</mo><mrow><mo>(</mo><msub><mi>v</mi><mi>S</mi></msub><mo>)</mo></mrow></mrow><mo>=</mo><munder><mo>∑</mo><mrow><mi>T</mi><mo>⊆</mo><mi>S</mi></mrow></munder><msub><mi>c</mi><mi>T</mi></msub><mo>,</mo></mrow></mtd></mtr><mtr><mtd><msub><mi>c</mi><mi>S</mi></msub></mtd><mtd><mrow><mo>=</mo><munder><mo>∑</mo><mrow><mi>T</mi><mo>⊆</mo><mi>S</mi></mrow></munder><mrow><msup><mrow><mo>(</mo><mo>−</mo><mn>1</mn><mo>)</mo></mrow><mrow><mo>|</mo><mi>S</mi><mo>∖</mo><mi>T</mi><mo>|</mo></mrow></msup><mo>⁢</mo><msub><mi>z</mi><mi>T</mi></msub></mrow><mo>.</mo></mrow></mtd></mtr></mtable></math></div>
+  <p>Evaluating a product at a row gives the product of its evaluations there. Transform both operands, multiply corresponding entries, and apply the inverse transform to the product array. This computes the reduced product in the original encoding. Because multiplying monomial masks uses bitwise OR, this operation on coefficients is called <em>OR convolution</em>.</p>
+  <p>The following pseudocode uses an array indexed by bit mask. In each pass, <code>bit</code> has one bit set. In the inverse loop, subtraction undoes the additions of the forward loop.</p>
+  <pre aria-label="Subset transform pseudocode"><code>subset_transform(array, number_of_variables, inverse):
+    for i from 0 to number_of_variables - 1:
+        bit = 1 &lt;&lt; i
+        for each mask with bit set:
+            lower = mask XOR bit
+            if inverse:
+                array[mask] -= array[lower]
+            else:
+                array[mask] += array[lower]
+
+multiply(left, right):
+    transform both coefficient arrays forward
+    multiply corresponding entries into an array
+    transform that array with inverse = true
+    return the resulting coefficients</code></pre>
+  <p>Only variables occurring in either operand need array positions. With <var>r</var> such variables, compress their bit positions to a contiguous range before the transform and expand them back afterward. For positive <var>r</var>, the dense method uses <math xmlns="http://www.w3.org/1998/Math/MathML"><mrow><mi>O</mi><mo>⁡</mo><mrow><mo>(</mo><mrow><mi>r</mi><mo>⁢</mo><msup><mn>2</mn><mi>r</mi></msup></mrow><mo>)</mo></mrow></mrow></math> arithmetic operations and <math xmlns="http://www.w3.org/1998/Math/MathML"><mrow><mi>O</mi><mo>⁡</mo><mrow><mo>(</mo><msup><mn>2</mn><mi>r</mi></msup><mo>)</mo></mrow></mrow></math> array storage. Constant operands can be handled directly. These bounds count arithmetic operations, and their actual cost also depends on coefficient size.</p>
+  <p>For a sequence of gates, values can stay in the transformed representation. Each array then holds a truth table, and gates act row by row. Recover coefficients when a symbolic polynomial is needed. If the final result is already a truth table, its true rows can be read directly.</p>
+</section>
+
+<section id="signed" aria-labelledby="signed-title">
+  <h2 id="signed-title">7. The signed representation</h2>
+  <p>Encode FALSE as −1 and TRUE as +1. The original bit <var>x</var> and its signed counterpart <var>s</var> are related by</p>
+  <div class="equation"><math xmlns="http://www.w3.org/1998/Math/MathML" display="block"><mi>x</mi><mo>=</mo><mfrac><mrow><mn>1</mn><mo>+</mo><mi>s</mi></mrow><mn>2</mn></mfrac><mo>,</mo><mrow><mi>s</mi><mo>=</mo><mn>2</mn><mi>x</mi><mo>−</mo><mn>1</mn></mrow><mo>.</mo></math></div>
+  <p>Apply the change of encoding to the inputs and output. If <var>p</var> is the original polynomial and <var>F</var> the signed polynomial, the two directions are</p>
+  <div class="equation"><math xmlns="http://www.w3.org/1998/Math/MathML" display="block"><mtable columnalign="right left"><mtr><mtd><mrow><mi>F</mi><mo>⁡</mo><mrow><mo>(</mo><mi>s</mi><mo>)</mo></mrow></mrow></mtd><mtd><mrow><mo>=</mo><mn>2</mn><mrow><mi>p</mi><mo>⁡</mo><mrow><mo>(</mo><mfrac><mrow><mn>1</mn><mo>+</mo><msub><mi>s</mi><mn>1</mn></msub></mrow><mn>2</mn></mfrac><mo>,</mo><mo>…</mo><mo>,</mo><mfrac><mrow><mn>1</mn><mo>+</mo><msub><mi>s</mi><mi>n</mi></msub></mrow><mn>2</mn></mfrac><mo>)</mo></mrow></mrow><mo>−</mo><mn>1</mn><mo>,</mo></mrow></mtd></mtr><mtr><mtd><mrow><mi>p</mi><mo>⁡</mo><mrow><mo>(</mo><mi>x</mi><mo>)</mo></mrow></mrow></mtd><mtd><mrow><mo>=</mo><mfrac><mrow><mn>1</mn><mo>+</mo><mrow><mi>F</mi><mo>⁡</mo><mrow><mo>(</mo><mrow><mn>2</mn><msub><mi>x</mi><mn>1</mn></msub><mo>−</mo><mn>1</mn></mrow><mo>,</mo><mo>…</mo><mo>,</mo><mrow><mn>2</mn><msub><mi>x</mi><mi>n</mi></msub><mo>−</mo><mn>1</mn></mrow><mo>)</mo></mrow></mrow></mrow><mn>2</mn></mfrac><mo>.</mo></mrow></mtd></mtr></mtable></math></div>
+  <p>Here <var>s</var> and <var>x</var> in function arguments denote the full input vectors. After substitution, reduce with the rules of the destination encoding. In the signed form, <math xmlns="http://www.w3.org/1998/Math/MathML"><msup><msub><mi>s</mi><mi>i</mi></msub><mn>2</mn></msup><mo>→</mo><mn>1</mn></math>, so even powers reduce to 1 and odd powers reduce to the variable. In the original form, <math xmlns="http://www.w3.org/1998/Math/MathML"><msup><msub><mi>x</mi><mi>i</mi></msub><mn>2</mn></msup><mo>→</mo><msub><mi>x</mi><mi>i</mi></msub></math>. Convert a signed result back to 0/1 before using the back-transformation above.</p>
+  <div class="table-scroll">
+    <table>
+      <caption>Gate formulas for signed signals <var>P</var> and <var>Q</var></caption>
+      <thead><tr><th scope="col">Gate</th><th scope="col">Signed polynomial</th></tr></thead>
+      <tbody>
+        <tr><th scope="row">NOT</th><td><math xmlns="http://www.w3.org/1998/Math/MathML"><mo>−</mo><mi>P</mi></math></td></tr>
+        <tr><th scope="row">AND</th><td><math xmlns="http://www.w3.org/1998/Math/MathML"><mfrac><mrow><mo>−</mo><mn>1</mn><mo>+</mo><mi>P</mi><mo>+</mo><mi>Q</mi><mo>+</mo><mrow><mi>P</mi><mo>⁢</mo><mi>Q</mi></mrow></mrow><mn>2</mn></mfrac></math></td></tr>
+        <tr><th scope="row">OR</th><td><math xmlns="http://www.w3.org/1998/Math/MathML"><mfrac><mrow><mn>1</mn><mo>+</mo><mi>P</mi><mo>+</mo><mi>Q</mi><mo>−</mo><mrow><mi>P</mi><mo>⁢</mo><mi>Q</mi></mrow></mrow><mn>2</mn></mfrac></math></td></tr>
+        <tr><th scope="row">XOR</th><td><math xmlns="http://www.w3.org/1998/Math/MathML"><mo>−</mo><mrow><mi>P</mi><mo>⁢</mo><mi>Q</mi></mrow></math></td></tr>
+      </tbody>
+    </table>
+  </div>
+  <p>The signed encoding makes input polarity symmetric. Inverting one input substitutes its negative, which reverses signs of terms containing that input while preserving their supports. Complementing the output negates the whole polynomial.</p>
+  <p>For example, let <var>s</var>, <var>t</var>, <var>u</var> be the signed inputs for <var>A</var>, <var>B</var>, <var>C</var>. In the 0/1 encoding, the function true only at <code>111</code> is <math xmlns="http://www.w3.org/1998/Math/MathML"><mrow><mi>a</mi><mo>⁢</mo><mi>b</mi><mo>⁢</mo><mi>c</mi></mrow></math>, and the function true only at <code>000</code> is <math xmlns="http://www.w3.org/1998/Math/MathML"><mrow><mrow><mo>(</mo><mn>1</mn><mo>−</mo><mi>a</mi><mo>)</mo></mrow><mo>⁢</mo><mrow><mo>(</mo><mn>1</mn><mo>−</mo><mi>b</mi><mo>)</mo></mrow><mo>⁢</mo><mrow><mo>(</mo><mn>1</mn><mo>−</mo><mi>c</mi><mo>)</mo></mrow></mrow></math>. The latter expands to eight terms. In signed form the two functions are</p>
+  <div class="equation"><math xmlns="http://www.w3.org/1998/Math/MathML" display="block"><mtable columnalign="right left"><mtr><mtd><msub><mi>F</mi><mn>111</mn></msub></mtd><mtd><mrow><mo>=</mo><mfrac><mrow><mo>−</mo><mn>3</mn><mo>+</mo><mi>s</mi><mo>+</mo><mi>t</mi><mo>+</mo><mi>u</mi><mo>+</mo><mrow><mi>s</mi><mo>⁢</mo><mi>t</mi></mrow><mo>+</mo><mrow><mi>s</mi><mo>⁢</mo><mi>u</mi></mrow><mo>+</mo><mrow><mi>t</mi><mo>⁢</mo><mi>u</mi></mrow><mo>+</mo><mrow><mi>s</mi><mo>⁢</mo><mi>t</mi><mo>⁢</mo><mi>u</mi></mrow></mrow><mn>4</mn></mfrac><mo>,</mo></mrow></mtd></mtr><mtr><mtd><msub><mi>F</mi><mn>000</mn></msub></mtd><mtd><mrow><mo>=</mo><mfrac><mrow><mo>−</mo><mn>3</mn><mo>−</mo><mi>s</mi><mo>−</mo><mi>t</mi><mo>−</mo><mi>u</mi><mo>+</mo><mrow><mi>s</mi><mo>⁢</mo><mi>t</mi></mrow><mo>+</mo><mrow><mi>s</mi><mo>⁢</mo><mi>u</mi></mrow><mo>+</mo><mrow><mi>t</mi><mo>⁢</mo><mi>u</mi></mrow><mo>−</mo><mrow><mi>s</mi><mo>⁢</mo><mi>t</mi><mo>⁢</mo><mi>u</mi></mrow></mrow><mn>4</mn></mfrac><mo>.</mo></mrow></mtd></mtr></mtable></math></div>
+  <p>Both signed polynomials have eight terms with equal coefficient magnitudes. Three-input parity shows the opposite tradeoff. The seven terms in the original full-adder sum collapse to <math xmlns="http://www.w3.org/1998/Math/MathML"><msup><mi>D</mi><mo>′</mo></msup><mo>=</mo><mrow><mi>s</mi><mo>⁢</mo><mi>t</mi><mo>⁢</mo><mi>u</mi></mrow></math> in the signed encoding.</p>
+  <div class="table-scroll">
+    <table class="truth">
+      <caption>Nonzero terms after expansion and collection</caption>
+      <thead><tr><th scope="col">Function</th><th scope="col">0/1</th><th scope="col">Signed</th></tr></thead>
+      <tbody>
+        <tr><th scope="row">True only at <code>111</code></th><td>1</td><td>8</td></tr>
+        <tr><th scope="row">True only at <code>000</code></th><td>8</td><td>8</td></tr>
+        <tr><th scope="row">True except at <code>111</code></th><td>2</td><td>8</td></tr>
+        <tr><th scope="row">Three-input XOR</th><td>7</td><td>1</td></tr>
+      </tbody>
+    </table>
+  </div>
+
+  <h3>Fast multiplication in the signed encoding</h3>
+  <p>Repeated signed variables cancel in pairs. For example, <math xmlns="http://www.w3.org/1998/Math/MathML"><mrow><mi mathvariant="normal">red</mi><mo>⁡</mo><mrow><mo>(</mo><mrow><mrow><mo>(</mo><mrow><mi>s</mi><mo>⁢</mo><mi>t</mi></mrow><mo>)</mo></mrow><mo>⁢</mo><mrow><mo>(</mo><mrow><mi>t</mi><mo>⁢</mo><mi>u</mi></mrow><mo>)</mo></mrow></mrow><mo>)</mo></mrow></mrow><mo>=</mo><mrow><mi>s</mi><mo>⁢</mo><mi>u</mi></mrow></math>. The resulting monomial contains the variables appearing in exactly one factor, so multiplication combines the masks by bitwise XOR. This is <em>XOR convolution</em>. The <strong>Fast Walsh–Hadamard Transform</strong> (FWHT) computes it by a sum-and-difference pass for each input bit.</p>
+  <pre aria-label="Walsh–Hadamard transform pseudocode"><code>hadamard_transform(array, number_of_variables):
+    for i from 0 to number_of_variables - 1:
+        bit = 1 &lt;&lt; i
+        for each mask with bit clear:
+            other = mask OR bit
+            low = array[mask]
+            high = array[other]
+            array[mask] = low + high
+            array[other] = low - high</code></pre>
+  <p>Write <var>H</var> for this unnormalized transform on arrays of length <math xmlns="http://www.w3.org/1998/Math/MathML"><mi>L</mi><mo>=</mo><msup><mn>2</mn><mi>r</mi></msup></math>. Applying it twice multiplies the original array by <var>L</var>. For signed coefficient arrays <var>c</var> and <var>d</var>, the product coefficients are</p>
+  <div class="equation"><math xmlns="http://www.w3.org/1998/Math/MathML" display="block"><mfrac><mrow><mi>H</mi><mo>⁡</mo><mrow><mo>(</mo><mrow><mi>H</mi><mo>⁡</mo><mrow><mo>(</mo><mi>c</mi><mo>)</mo></mrow></mrow><mo>⊙</mo><mrow><mi>H</mi><mo>⁡</mo><mrow><mo>(</mo><mi>d</mi><mo>)</mo></mrow></mrow><mo>)</mo></mrow></mrow><mi>L</mi></mfrac><mo>.</mo></math></div>
+  <p>The symbol ⊙ means pointwise multiplication. A row bit of 1 in the transform’s output corresponds to a signed input of −1, since a monomial picks up a negative sign for each such bit it contains. This convention is the reverse of the original truth-row convention for each input bit.</p>
+  <p>As with the subset transforms, the dense method takes <math xmlns="http://www.w3.org/1998/Math/MathML"><mrow><mi>O</mi><mo>⁡</mo><mrow><mo>(</mo><mrow><mi>r</mi><mo>⁢</mo><msup><mn>2</mn><mi>r</mi></msup></mrow><mo>)</mo></mrow></mrow></math> arithmetic operations and <math xmlns="http://www.w3.org/1998/Math/MathML"><mrow><mi>O</mi><mo>⁡</mo><mrow><mo>(</mo><msup><mn>2</mn><mi>r</mi></msup><mo>)</mo></mrow></mrow></math> storage for positive <var>r</var>. A full dense transform visits the whole array regardless of how many coefficients are zero. In the straightforward loops above, each FWHT pair takes a sum and a difference, while each subset-transform pair takes a single addition or subtraction. Actual timings depend on the implementation and coefficient arithmetic.</p>
+  <p>Signed coefficients are exact fractions with powers of two in the denominator. With <var>n</var> inputs, a signed Boolean polynomial has coefficients that can be stored with common denominator <math xmlns="http://www.w3.org/1998/Math/MathML"><msup><mn>2</mn><mi>n</mi></msup></math>, because its coefficient array is the transform of the signed truth table divided by <math xmlns="http://www.w3.org/1998/Math/MathML"><msup><mn>2</mn><mi>n</mi></msup></math>. Exact fractions or scaled integers preserve cancellation. Rescaling the encoding to −½ and +½ is also possible, with square rule <math xmlns="http://www.w3.org/1998/Math/MathML"><msup><msub><mi>s</mi><mi>i</mi></msub><mn>2</mn></msup><mo>→</mo><mfrac><mn>1</mn><mn>4</mn></mfrac></math> in those coordinates. The −1/+1 choice gives the simpler mask rule.</p>
+</section>
+
+<section id="implementation" aria-labelledby="implementation-title">
+  <h2 id="implementation-title">8. Choose a multiplication method</h2>
+  <p>A practical implementation can begin in the original 0/1 encoding and choose how to multiply each pair of polynomials. The term counts, active input count, and distribution of supports all affect the choice.</p>
+  <div class="table-scroll">
+    <table class="methods">
+      <caption>Three cases for the original encoding</caption>
+      <thead><tr><th scope="col">Case</th><th scope="col">Method</th><th scope="col">What governs the cost</th></tr></thead>
+      <tbody>
+        <tr><th scope="row">Sparse</th><td>Store only nonzero terms. Multiply the term pairs and collect by mask.</td><td>Up to <math xmlns="http://www.w3.org/1998/Math/MathML"><mrow><mi>k</mi><mo>⁢</mo><mi>l</mi></mrow></math> pairs for term counts <var>k</var> and <var>l</var>.</td></tr>
+        <tr><th scope="row">Intermediate</th><td>Keep sparse groups on some variables and transform the remaining variables within each group.</td><td>The number of occupied groups and the size of each transformed array.</td></tr>
+        <tr><th scope="row">Dense</th><td>Apply the subset transforms over the union of the active variables.</td><td><math xmlns="http://www.w3.org/1998/Math/MathML"><mrow><mi>O</mi><mo>⁡</mo><mrow><mo>(</mo><mrow><mi>r</mi><mo>⁢</mo><msup><mn>2</mn><mi>r</mi></msup></mrow><mo>)</mo></mrow></mrow></math> arithmetic operations for <var>r</var> active variables.</td></tr>
+      </tbody>
+    </table>
+  </div>
+  <p>For the intermediate method, split the variables into two sets. Use monomial masks on the first set as group keys and treat the coefficients in each group as polynomials in the second set. Transform those inner polynomials. For each pair of occupied groups, multiply their inner arrays pointwise and add the result to the group whose key is the bitwise OR of the two keys. Apply the inverse transform to each resulting group. This follows by distributing the product across the groups. The choice of split and its performance still need benchmarking.</p>
+  <p>Switching between the original and signed encodings can be worthwhile when an expression becomes much sparser in the other form. A conversion can also expand the expression, as the single-row examples show. A result can stay in its chosen encoding until a later gate needs another representation. The relevant costs are multiplication, conversion, and how often later gates can reuse the converted form.</p>
+  <p>Dense transforms reduce the cost of multiplying expanded polynomials, while the largest arrays still grow exponentially with the number of active inputs. Benchmarking will determine when to switch among the methods on actual networks.</p>
+
+  <h3>Earlier C# implementations</h3>
+  <p>LinearBoolean3 implemented the original expanded 0/1 notation with integer coefficients and a variable mask per term. Its archived verification loop checked every three-input truth table. BLB extended the stored factors with negated literals and <code>xA</code>, the signed factor <math xmlns="http://www.w3.org/1998/Math/MathML"><mn>2</mn><mi>a</mi><mo>−</mo><mn>1</mn></math>. It used that representation in experiments with Golomb rulers, SHA-256 stages, and Keccak.</p>
+  <p>An earlier program, BLB, experimented with retaining negated literals inside terms. A term written <code>A!B!C</code> could stand for <math xmlns="http://www.w3.org/1998/Math/MathML"><mrow><mi>a</mi><mo>⁢</mo><mrow><mo>(</mo><mn>1</mn><mo>−</mo><mi>b</mi><mo>)</mo></mrow><mo>⁢</mo><mrow><mo>(</mo><mn>1</mn><mo>−</mo><mi>c</mi><mo>)</mo></mrow></mrow></math> without expanding it. This allowed direct rules such as <math xmlns="http://www.w3.org/1998/Math/MathML"><mrow><mi mathvariant="normal">red</mi><mo>⁡</mo><mrow><mo>(</mo><mrow><mi>a</mi><mo>⁢</mo><mrow><mo>(</mo><mn>1</mn><mo>−</mo><mi>a</mi><mo>)</mo></mrow></mrow><mo>)</mo></mrow></mrow><mo>=</mo><mn>0</mn></math> and could keep the written expression smaller. The expanded form used in the proof collects terms by their variable sets. Factored literal forms are a separate representation that can be explored alongside it.</p>
+  <p>The companion page records the complete BLB multiplication and compaction rules, corrections to the archived comments, and parity measurements reproduced from the C# code. <a href="BLBRuleArchive.html">Read the archive review and rule tables</a>.</p>
+</section>
+    </article>
+  </main>
+  <footer>
+    <div class="wrap">
+      <p>Original AlgebraicBoolean method and back-transformation procedure by Rado. The proof and audit were developed in collaboration with ChatGPT.</p>
+      <p><a href="#article">Back to article</a></p>
+    </div>
+  </footer>
+</body>
+</html>

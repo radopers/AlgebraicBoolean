@@ -1,0 +1,243 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="color-scheme" content="light">
+  <title>Why the back-transformation works · AlgebraicBoolean</title>
+  <style>
+    :root {
+      --paper: #fbfaf6;
+      --ink: #202a29;
+      --muted: #4c5d58;
+      --accent: #20584e;
+      --wash: #edf4ef;
+      --line: #cbd8d1;
+    }
+    * { box-sizing: border-box; }
+    body {
+      margin: 0;
+      background: var(--paper);
+      color: var(--ink);
+      font: 1.0625rem/1.65 system-ui, sans-serif;
+    }
+    .wrap { width: min(48rem, calc(100% - 3rem)); margin-inline: auto; }
+    header {
+      padding: 3.5rem 0 2.5rem;
+      background: var(--wash);
+      border-top: .35rem solid var(--accent);
+      border-bottom: 1px solid var(--line);
+    }
+    .kicker {
+      margin: 0 0 .6rem;
+      color: var(--accent);
+      font-size: .8rem;
+      font-weight: 700;
+      letter-spacing: .1em;
+      text-transform: uppercase;
+    }
+    h1, h2 { font-family: Georgia, serif; font-weight: 500; line-height: 1.14; }
+    h1 { max-width: 19ch; margin: 0 0 1rem; font-size: clamp(2.4rem, 6vw, 4rem); }
+    h2 { margin: 0 0 .8rem; font-size: clamp(1.8rem, 4vw, 2.3rem); }
+    h3 { margin: 0 0 .4rem; font-size: 1.12rem; line-height: 1.35; }
+    p { max-width: 69ch; margin: 0 0 .9rem; }
+    .lead { max-width: 57ch; margin: 0; color: var(--muted); font-size: 1.17rem; }
+    nav { display: flex; flex-wrap: wrap; gap: .35rem 1.4rem; margin-top: 1.55rem; }
+    a { color: var(--accent); text-underline-offset: .2em; }
+    a:focus-visible, summary:focus-visible { outline: 2px solid var(--accent); outline-offset: 4px; }
+    nav a { font-size: .9rem; font-weight: 650; }
+    section { margin: 2.6rem 0; scroll-margin-top: 1rem; }
+    section + section { padding-top: 2.2rem; border-top: 1px solid var(--line); }
+    .theorem, .equation {
+      margin: 1rem 0;
+      padding: .8rem 1rem;
+      background: var(--wash);
+      border-left: .24rem solid var(--accent);
+    }
+    .theorem p:last-child { margin-bottom: 0; }
+    .math, .equation { font-family: Georgia, "Cambria Math", serif; }
+    .equation { max-width: none; font-size: 1.16rem; overflow-wrap: anywhere; }
+    sub, sup { line-height: 0; }
+    details { margin: .9rem 0 1rem; }
+    summary { width: fit-content; cursor: pointer; color: var(--accent); font-weight: 650; }
+    dl { display: grid; grid-template-columns: max-content minmax(0, 1fr); gap: .2rem 1rem; margin: .55rem 0; }
+    dd { margin: 0; }
+    .steps, .trace { padding: 0; margin: 1.25rem 0; list-style: none; }
+    .steps > li, .trace > li {
+      display: grid;
+      grid-template-columns: 2.2rem minmax(0, 1fr);
+      gap: .75rem;
+      margin: 0 0 1.55rem;
+    }
+    .number {
+      display: grid;
+      place-items: center;
+      width: 2rem;
+      height: 2rem;
+      border: 1px solid var(--line);
+      border-radius: 50%;
+      color: var(--accent);
+      background: var(--wash);
+      font-size: .92rem;
+      font-weight: 750;
+    }
+    .steps li p:last-child, .trace li p:last-child { margin-bottom: 0; }
+    .trace > li { margin-bottom: .8rem; padding: .7rem 0; border-bottom: 1px solid var(--line); }
+    .trace p { margin-bottom: .25rem; }
+    .trace .math { font-size: 1.05rem; }
+    .caption { color: var(--muted); font-size: .91rem; }
+    footer { padding: 1.2rem 0 2rem; border-top: 1px solid var(--line); color: var(--muted); font-size: .9rem; }
+    @media (max-width: 35rem) {
+      .wrap { width: calc(100% - 2rem); }
+      header { padding: 2.2rem 0 1.6rem; }
+      .steps > li, .trace > li { grid-template-columns: 1.65rem minmax(0, 1fr); gap: .55rem; }
+      .number { width: 1.55rem; height: 1.55rem; }
+    }
+    @media print {
+      body, header, .theorem, .equation, .number { background: white; }
+      body { font-size: 11pt; }
+      .wrap { width: 100%; }
+      header { padding: .5rem 0 1rem; }
+      h1 { font-size: 29pt; }
+      h2 { font-size: 19pt; }
+      h1, h2, h3 { break-after: avoid; }
+      .theorem, .equation, .trace > li { break-inside: avoid; }
+      nav { display: none; }
+      section { margin: 1.4rem 0; }
+      section + section { padding-top: 1.1rem; }
+    }
+  </style>
+</head>
+<body>
+  <header>
+    <div class="wrap">
+      <p class="kicker">AlgebraicBoolean · Proof</p>
+      <h1>Why the back-transformation works</h1>
+      <p class="lead">Read one true row from a polynomial, save that row as a Boolean AND term, and remove it. Repeat until the polynomial is zero.</p>
+      <nav aria-label="In this document">
+        <a href="#setup">Starting point</a>
+        <a href="#proof">The proof</a>
+        <a href="#example">Full adder</a>
+        <a href="#shortcut">Subtraction shortcut</a>
+      </nav>
+    </div>
+  </header>
+
+  <main class="wrap">
+    <section id="setup" aria-labelledby="setup-title">
+      <h2 id="setup-title">Start with a reduced polynomial</h2>
+      <p>Fix a list of <var>n</var> Boolean inputs. Each input is either 0 or 1. An AlgebraicBoolean polynomial <var>p</var> gives an output for every combination of input values. We call a row of the truth table true when its output is 1.</p>
+      <p>To reduce <var>p</var>, expand the products, replace every positive power of a variable by that variable, and collect matching terms. This preserves every Boolean output because, for example, <span class="math"><var>A</var><sup>2</sup> = <var>A</var></span> at both 0 and 1. After reduction, a term such as <span class="math">−2<var>AB</var></span> has coefficient −2 and degree 2, since it contains two variables. A constant has degree 0.</p>
+      <details>
+        <summary>The original gate formulas</summary>
+        <dl>
+          <dt>NOT</dt><dd class="math">1 − <var>p</var></dd>
+          <dt>AND</dt><dd class="math"><var>pq</var></dd>
+          <dt>OR</dt><dd class="math"><var>p</var> + <var>q</var> − <var>pq</var></dd>
+          <dt>XOR</dt><dd class="math"><var>p</var> + <var>q</var> − 2<var>pq</var></dd>
+        </dl>
+        <p>These formulas give the gate’s Boolean output whenever the input signals are 0 or 1. Applying them throughout a combinational network therefore gives a polynomial that also has only 0 and 1 as outputs on Boolean input rows.</p>
+      </details>
+      <div class="theorem">
+        <h3>The claim</h3>
+        <p>For any reduced polynomial that outputs 0 or 1 on every Boolean input row, the back-transformation returns an equivalent Boolean expression. Each step extracts exactly one true row. The process takes exactly as many steps as there are true rows, at most <span class="math">2<sup><var>n</var></sup></span>.</p>
+      </div>
+    </section>
+
+    <section id="proof" aria-labelledby="proof-title">
+      <h2 id="proof-title">The proof</h2>
+      <ol class="steps" role="list">
+        <li>
+          <span class="number" aria-hidden="true">1</span>
+          <div>
+            <h3>The smallest term reveals a true row</h3>
+            <p>From the current nonzero polynomial, choose a term with a nonzero coefficient and the fewest variables. Set exactly the variables in that term to 1, and set every other input to 0.</p>
+            <p>Say the chosen term is <span class="math"><var>kAB</var></span>. At the row with <var>A</var> and <var>B</var> both 1, the chosen term contributes <var>k</var>. Every other term of the same or higher degree contains a variable outside <var>A</var> and <var>B</var>, so it vanishes. There are no nonzero terms of lower degree, by how we chose the term. The entire polynomial therefore evaluates to <var>k</var>.</p>
+            <p>The same reasoning works for any set of variables in the chosen term. Its coefficient equals the polynomial’s value at the corresponding row. Since that coefficient is nonzero and the only possible outputs are 0 and 1, <strong>the coefficient is +1 and the row is true</strong>.</p>
+            <p>Any tie for the fewest variables can be resolved in any order. If the selected term is the constant +1, its row is the one with every input set to 0.</p>
+          </div>
+        </li>
+        <li>
+          <span class="number" aria-hidden="true">2</span>
+          <div>
+            <h3>AND with the inverse removes just that row</h3>
+            <p>Use every input exactly once in the Boolean AND term. Use the variable itself where the row has a 1, and its negation where the row has a 0. For inputs <var>A</var>, <var>B</var>, <var>C</var>, the row <span class="math">(1, 1, 0)</span> gives <span class="math"><var>A</var> ∧ <var>B</var> ∧ ¬<var>C</var></span>. Its algebraic form is <span class="math"><var>m</var> = <var>AB</var>(1 − <var>C</var>)</span>.</p>
+            <p>Save the Boolean term for the final result. To remove its row from the remaining polynomial, AND the remainder with the inverse of that term.</p>
+            <p class="equation"><var>p</var><sub>new</sub> = reduce(<var>p</var>(1 − <var>m</var>))</p>
+            <p>At the selected row, <span class="math"><var>m</var> = 1</span>, so the new output is 0. At every other row, <span class="math"><var>m</var> = 0</span>, so the output stays what it was. Reduction preserves these values. The remainder still has only 0 and 1 as outputs, so we can apply the first step again.</p>
+          </div>
+        </li>
+        <li>
+          <span class="number" aria-hidden="true">3</span>
+          <div>
+            <h3>The procedure reaches zero and returns the original function</h3>
+            <p>Each pass removes one true row. Once removed, that row stays false. There are finitely many rows, so eventually every remaining output is 0.</p>
+            <p>At that point, the reduced polynomial itself must be zero. If it still had a nonzero term, we could pick a smallest one and evaluate at its row as in step 1. The output would equal its nonzero coefficient, contradicting the fact that every output is 0.</p>
+            <p>OR together the Boolean terms saved along the way. Each term is true at just its extracted row, so the OR is true at exactly the original true rows. If the initial polynomial is zero, there are no terms to save and the result is FALSE.</p>
+          </div>
+        </li>
+      </ol>
+    </section>
+
+    <section id="example" aria-labelledby="example-title">
+      <h2 id="example-title">Follow the full adder</h2>
+      <p>The full adder’s sum bit is <span class="math"><var>D</var> = <var>A</var> ⊕ <var>B</var> ⊕ <var>C</var></span>. Its starting polynomial is</p>
+      <p class="equation"><var>p</var><sub>0</sub> = <var>A</var> + <var>B</var> + <var>C</var> − 2<var>AB</var> − 2<var>AC</var> − 2<var>BC</var> + 4<var>ABC</var>.</p>
+      <p>We can choose <var>A</var> first among the tied degree-one terms. At <span class="math">(1, 0, 0)</span>, all the other terms vanish. The four passes are shown below. In a Boolean term, ¬ means NOT and ∧ means AND.</p>
+      <ol class="trace" role="list">
+        <li>
+          <span class="number" aria-hidden="true">1</span>
+          <div>
+            <p><strong>Select <var>A</var>.</strong> Save <span class="math"><var>A</var> ∧ ¬<var>B</var> ∧ ¬<var>C</var></span>.</p>
+            <p class="math"><var>p</var><sub>1</sub> = <var>B</var> + <var>C</var> − <var>AB</var> − <var>AC</var> − 2<var>BC</var> + 3<var>ABC</var></p>
+          </div>
+        </li>
+        <li>
+          <span class="number" aria-hidden="true">2</span>
+          <div>
+            <p><strong>Select <var>B</var>.</strong> Save <span class="math">¬<var>A</var> ∧ <var>B</var> ∧ ¬<var>C</var></span>.</p>
+            <p class="math"><var>p</var><sub>2</sub> = <var>C</var> − <var>AC</var> − <var>BC</var> + 2<var>ABC</var></p>
+          </div>
+        </li>
+        <li>
+          <span class="number" aria-hidden="true">3</span>
+          <div>
+            <p><strong>Select <var>C</var>.</strong> Save <span class="math">¬<var>A</var> ∧ ¬<var>B</var> ∧ <var>C</var></span>.</p>
+            <p class="math"><var>p</var><sub>3</sub> = <var>ABC</var></p>
+          </div>
+        </li>
+        <li>
+          <span class="number" aria-hidden="true">4</span>
+          <div>
+            <p><strong>Select <var>ABC</var>.</strong> Save <span class="math"><var>A</var> ∧ <var>B</var> ∧ <var>C</var></span>.</p>
+            <p class="math"><var>p</var><sub>4</sub> = 0</p>
+          </div>
+        </li>
+      </ol>
+      <p>The result is the OR of the four saved terms, written with ∨ for OR.</p>
+      <p class="equation"><var>D</var> = (<var>A</var> ∧ ¬<var>B</var> ∧ ¬<var>C</var>) ∨ (¬<var>A</var> ∧ <var>B</var> ∧ ¬<var>C</var>) ∨ (¬<var>A</var> ∧ ¬<var>B</var> ∧ <var>C</var>) ∨ (<var>A</var> ∧ <var>B</var> ∧ <var>C</var>)</p>
+      <p>This is true exactly at <span class="math">(1, 0, 0)</span>, <span class="math">(0, 1, 0)</span>, <span class="math">(0, 0, 1)</span>, and <span class="math">(1, 1, 1)</span>. Those are the full adder’s four rows with sum bit 1.</p>
+    </section>
+
+    <section id="shortcut" aria-labelledby="shortcut-title">
+      <h2 id="shortcut-title">Remove the row by subtraction</h2>
+      <p>The proof also gives a shortcut. The selected row is already true in <var>p</var>, so <var>pm</var> and <var>m</var> have the same output everywhere. Both are 1 at that row and 0 elsewhere.</p>
+      <p>Two reduced polynomials with the same values on Boolean inputs are identical. Their difference is a reduced polynomial with all outputs zero, and step 3 proved that such a polynomial must be zero. Therefore the reduced product <var>pm</var> is <var>m</var>, with <var>m</var> expanded and collected.</p>
+      <p class="equation">reduce(<var>p</var>(1 − <var>m</var>)) = <var>p</var> − <var>m</var></p>
+      <p>In the full adder’s first pass, expand <span class="math"><var>m</var> = <var>A</var>(1 − <var>B</var>)(1 − <var>C</var>)</span> to get <span class="math"><var>A</var> − <var>AB</var> − <var>AC</var> + <var>ABC</var></span>. Subtract those four terms from <span class="math"><var>p</var><sub>0</sub></span> to get <span class="math"><var>p</var><sub>1</sub></span> directly.</p>
+      <p>Every term in the expanded row polynomial contains all the selected variables. Subtraction cancels the selected term and changes only terms of higher degree. So the search for the next term can move forward through a list ordered by degree.</p>
+    </section>
+
+    <section aria-labelledby="scope-title">
+      <h2 id="scope-title">Using the result</h2>
+      <p>Keep the complete input list throughout the procedure, even when some inputs disappear from the remaining polynomial. Each saved AND term specifies a complete row. Use exact arithmetic so that terms cancel exactly. The gate formulas above generate integer coefficients in the original 0/1 system.</p>
+      <p>The result gives one AND term per true row, joined by OR. In Boolean algebra this is called <em>canonical disjunctive normal form</em>. Further simplification may combine rows and produce a shorter expression.</p>
+      <p class="caption">A separate local check exercised the algorithm on all 65,814 Boolean functions with zero through four inputs. The proof above applies to any finite number of inputs.</p>
+    </section>
+  </main>
+
+  <footer>
+    <div class="wrap">AlgebraicBoolean · Back-transformation proof</div>
+  </footer>
+</body>
+</html>
