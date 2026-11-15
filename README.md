@@ -7,10 +7,3 @@ Developed by Roland Adorni (somewhen in 2013)
 https://github.com/user-attachments/assets/f057a813-f4b5-4d07-bd60-9cd97b0eb990
 
 **[Read the AlgebraicBoolean paper](https://radopers.github.io/AlgebraicBoolean/AlgebraicBoolean.html)**
-
-
-Important Content:
-
-  **AlgebraicBoolean.html**, Main document with the description of the method
-
-It is recommended to download all html files to have the full set. The main document links to them.
