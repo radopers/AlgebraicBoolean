@@ -5,7 +5,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <meta name="color-scheme" content="light">
   <meta name="description" content="AlgebraicBoolean translates Boolean networks into reduced polynomials and recovers their true rows. Learn the method, check the proof, and reproduce the full-adder example.">
-  <title>AlgebraicBoolean · From Boolean networks to polynomials and back</title>
+  <title>AlgebraicBoolean · Version 1.01 · From Boolean networks to polynomials and back</title>
   <style>
     :root {
       --paper: #fcfbf7;
@@ -91,7 +91,7 @@
   <a class="skip" href="#article">Skip to article</a>
   <header class="hero">
     <div class="wrap">
-      <p class="kicker">From the 2013 notes · November 2026 edition · Method developed by Roland Adorni</p>
+      <p class="kicker">From the 2013 notes · Version 1.01 · November 2026 · Method developed by Roland Adorni</p>
       <h1>AlgebraicBoolean</h1>
       <p class="subtitle">From Boolean networks to polynomials and back</p>
       <p class="lead">Translate logic gates into ordinary arithmetic, reduce repeated variables, and recover exactly the input rows that make the result true.</p>
@@ -109,6 +109,7 @@
         <li><a href="#multiplication">Fast multiplication</a></li>
         <li><a href="#signed">The signed representation</a></li>
         <li><a href="#implementation">Implementation choices</a></li>
+        <li><a href="#credits">Contributions and references</a></li>
       </ol>
     </div>
   </nav>
@@ -228,6 +229,7 @@
 
 <section id="correctness" aria-labelledby="correctness-title">
   <h2 id="correctness-title">5. Why the back-transformation works</h2>
+  <p>The proof of Roland Adorni’s back-transformation procedure was developed by <strong>ChatGPT 6.1 Sol High</strong>.</p>
   <p class="statement"><strong>The guarantee.</strong> For any reduced polynomial that outputs 0 or 1 at every Boolean input, every minimum-degree choice has coefficient +1. The process extracts each true row once and terminates in exactly as many steps as there are true rows, at most <math xmlns="http://www.w3.org/1998/Math/MathML"><msup><mn>2</mn><mi>n</mi></msup></math>.</p>
   <ol>
     <li><strong>The selected coefficient is the value of its row.</strong> At <math xmlns="http://www.w3.org/1998/Math/MathML"><msub><mi>v</mi><mi>S</mi></msub></math>, a monomial <math xmlns="http://www.w3.org/1998/Math/MathML"><msub><mi>x</mi><mi>T</mi></msub></math> survives exactly when <math xmlns="http://www.w3.org/1998/Math/MathML"><mi>T</mi><mo>⊆</mo><mi>S</mi></math>. For a selected support <var>S</var>, every proper subset has lower degree, so its coefficient is zero. Thus <math xmlns="http://www.w3.org/1998/Math/MathML"><mrow><mi>p</mi><mo>⁡</mo><mrow><mo>(</mo><msub><mi>v</mi><mi>S</mi></msub><mo>)</mo></mrow></mrow><mo>=</mo><munder><mo>∑</mo><mrow><mi>T</mi><mo>⊆</mo><mi>S</mi></mrow></munder><msub><mi>c</mi><mi>T</mi></msub><mo>=</mo><msub><mi>c</mi><mi>S</mi></msub></math>. A nonzero coefficient equal to a Boolean output must be 1.</li>
@@ -254,8 +256,10 @@
 
 <section id="multiplication" aria-labelledby="multiplication-title">
   <h2 id="multiplication-title">6. Multiply without expanding every pair of terms</h2>
+  <p>While reviewing Roland Adorni’s old notes, ChatGPT suggested using established transform algorithms to accelerate multiplication. The fast methods in this section and section 7 are proposed extensions, illustrated with pseudocode; Roland Adorni has not implemented them.</p>
   <p>With <var>k</var> nonzero terms in one operand and <var>l</var> in the other, direct multiplication visits at most <math xmlns="http://www.w3.org/1998/Math/MathML"><mrow><mi>k</mi><mo>⁢</mo><mi>l</mi></mrow></math> term pairs. For each pair, multiply the coefficients and add the result to the coefficient indexed by the union of the variable sets. With dense operands on <var>n</var> inputs, this can take <math xmlns="http://www.w3.org/1998/Math/MathML"><mrow><mi>O</mi><mo>⁡</mo><mrow><mo>(</mo><msup><mn>4</mn><mi>n</mi></msup><mo>)</mo></mrow></mrow></math> arithmetic operations.</p>
-  <p>The faster dense method changes the representation temporarily. The <strong>subset zeta transform</strong> maps the coefficient array <var>c</var> to the polynomial’s values at all Boolean input rows. The <strong>subset Möbius transform</strong> reverses that map.</p>
+  <p>The faster dense method changes the representation temporarily. The <strong>subset zeta transform</strong> maps the coefficient array <var>c</var> to the polynomial’s values at all Boolean input rows. The <strong>subset Möbius transform</strong> reverses that map. These are established algorithms proposed here for use with AlgebraicBoolean; see <a href="#ref-subset">reference 1</a>.</p>
+  <p>For an intuitive explanation of the complete multiplication method, start with <a href="#ref-or-introduction">reference 3</a>. For a short academic treatment of the transforms and their fast computation, see <a href="#ref-zeta-lecture">reference 4</a>, sections 2.1–2.3.</p>
   <div class="equation"><math xmlns="http://www.w3.org/1998/Math/MathML" display="block"><mtable columnalign="right left"><mtr><mtd><msub><mi>z</mi><mi>S</mi></msub></mtd><mtd><mrow><mo>=</mo><mrow><mi>p</mi><mo>⁡</mo><mrow><mo>(</mo><msub><mi>v</mi><mi>S</mi></msub><mo>)</mo></mrow></mrow><mo>=</mo><munder><mo>∑</mo><mrow><mi>T</mi><mo>⊆</mo><mi>S</mi></mrow></munder><msub><mi>c</mi><mi>T</mi></msub><mo>,</mo></mrow></mtd></mtr><mtr><mtd><msub><mi>c</mi><mi>S</mi></msub></mtd><mtd><mrow><mo>=</mo><munder><mo>∑</mo><mrow><mi>T</mi><mo>⊆</mo><mi>S</mi></mrow></munder><mrow><msup><mrow><mo>(</mo><mo>−</mo><mn>1</mn><mo>)</mo></mrow><mrow><mo>|</mo><mi>S</mi><mo>∖</mo><mi>T</mi><mo>|</mo></mrow></msup><mo>⁢</mo><msub><mi>z</mi><mi>T</mi></msub></mrow><mo>.</mo></mrow></mtd></mtr></mtable></math></div>
   <p>Evaluating a product at a row gives the product of its evaluations there. Transform both operands, multiply corresponding entries, and apply the inverse transform to the product array. This computes the reduced product in the original encoding. Because multiplying monomial masks uses bitwise OR, this operation on coefficients is called <em>OR convolution</em>.</p>
   <p>The following pseudocode uses an array indexed by bit mask. In each pass, <code>bit</code> has one bit set. In the inverse loop, subtraction undoes the additions of the forward loop.</p>
@@ -315,7 +319,7 @@ multiply(left, right):
   </div>
 
   <h3>Fast multiplication in the signed encoding</h3>
-  <p>Repeated signed variables cancel in pairs. For example, <math xmlns="http://www.w3.org/1998/Math/MathML"><mrow><mi mathvariant="normal">red</mi><mo>⁡</mo><mrow><mo>(</mo><mrow><mrow><mo>(</mo><mrow><mi>s</mi><mo>⁢</mo><mi>t</mi></mrow><mo>)</mo></mrow><mo>⁢</mo><mrow><mo>(</mo><mrow><mi>t</mi><mo>⁢</mo><mi>u</mi></mrow><mo>)</mo></mrow></mrow><mo>)</mo></mrow></mrow><mo>=</mo><mrow><mi>s</mi><mo>⁢</mo><mi>u</mi></mrow></math>. The resulting monomial contains the variables appearing in exactly one factor, so multiplication combines the masks by bitwise XOR. This is <em>XOR convolution</em>. The <strong>Fast Walsh–Hadamard Transform</strong> (FWHT) computes it by a sum-and-difference pass for each input bit.</p>
+  <p>Repeated signed variables cancel in pairs. For example, <math xmlns="http://www.w3.org/1998/Math/MathML"><mrow><mi mathvariant="normal">red</mi><mo>⁡</mo><mrow><mo>(</mo><mrow><mrow><mo>(</mo><mrow><mi>s</mi><mo>⁢</mo><mi>t</mi></mrow><mo>)</mo></mrow><mo>⁢</mo><mrow><mo>(</mo><mrow><mi>t</mi><mo>⁢</mo><mi>u</mi></mrow><mo>)</mo></mrow></mrow><mo>)</mo></mrow></mrow><mo>=</mo><mrow><mi>s</mi><mo>⁢</mo><mi>u</mi></mrow></math>. The resulting monomial contains the variables appearing in exactly one factor, so multiplication combines the masks by bitwise XOR. This is <em>XOR convolution</em>. The <strong>Fast Walsh–Hadamard Transform</strong> (FWHT) computes it by a sum-and-difference pass for each input bit. For a basic description of the transform and its fast algorithm, see the Wikipedia articles in <a href="#ref-transforms">reference 2</a>.</p>
   <pre aria-label="Walsh–Hadamard transform pseudocode"><code>hadamard_transform(array, number_of_variables):
     for i from 0 to number_of_variables - 1:
         bit = 1 &lt;&lt; i
@@ -355,11 +359,29 @@ multiply(left, right):
   <p>An earlier program, BLB, experimented with retaining negated literals inside terms. A term written <code>A!B!C</code> could stand for <math xmlns="http://www.w3.org/1998/Math/MathML"><mrow><mi>a</mi><mo>⁢</mo><mrow><mo>(</mo><mn>1</mn><mo>−</mo><mi>b</mi><mo>)</mo></mrow><mo>⁢</mo><mrow><mo>(</mo><mn>1</mn><mo>−</mo><mi>c</mi><mo>)</mo></mrow></mrow></math> without expanding it. This allowed direct rules such as <math xmlns="http://www.w3.org/1998/Math/MathML"><mrow><mi mathvariant="normal">red</mi><mo>⁡</mo><mrow><mo>(</mo><mrow><mi>a</mi><mo>⁢</mo><mrow><mo>(</mo><mn>1</mn><mo>−</mo><mi>a</mi><mo>)</mo></mrow></mrow><mo>)</mo></mrow></mrow><mo>=</mo><mn>0</mn></math> and could keep the written expression smaller. The expanded form used in the proof collects terms by their variable sets. Factored literal forms are a separate representation that can be explored alongside it.</p>
   <p>The companion page records the complete BLB multiplication and compaction rules, corrections to the archived comments, and parity measurements reproduced from the C# code. <a href="BLBRuleArchive.html">Read the archive review and rule tables</a>.</p>
 </section>
+<section id="credits" aria-labelledby="credits-title">
+  <h2 id="credits-title">9. Contributions and references</h2>
+  <p><strong>Version 1.01</strong> · <time datetime="2026-11-18">18 November 2026</time>. This update clarifies the contributions and adds references for the fast multiplication algorithms.</p>
+  <ul>
+    <li><strong>Original method:</strong> Roland Adorni (Rado) developed the AlgebraicBoolean method and its back-transformation procedure, as documented in his original notes and implementations.</li>
+    <li><strong>Proof:</strong> ChatGPT 6.1 Sol High developed the proof of correctness of the back-transformation procedure presented in the linked proof pages.</li>
+    <li><strong>HTML document:</strong> ChatGPT wrote and structured this HTML document from Roland Adorni’s original notes and the subsequent work with him.</li>
+    <li><strong>Fast multiplication proposals:</strong> ChatGPT suggested the subset zeta/Möbius transforms for OR convolution and the Fast Walsh–Hadamard Transform for XOR convolution while reviewing Roland Adorni’s old notes with him. The underlying algorithms come from existing literature and online sources, referenced below. Their use with AlgebraicBoolean is presented as a proposed extension with pseudocode; Roland Adorni has not implemented these fast multiplication techniques.</li>
+  </ul>
+  <h3 id="references">References for fast multiplication</h3>
+  <ol>
+    <li id="ref-subset">USACO Guide. <a href="https://usaco.guide/plat/dp-sos"><cite>Sum over Subsets DP</cite></a>. An introduction with examples to summing over subsets and computing those sums efficiently—the subset zeta transform used in section 6 above. For the inverse transform and multiplication, see jinhan814’s <a href="https://codeforces.com/blog/entry/119082"><cite>[Tutorial] Zeta, Mobius Transform to AND, OR, GCD Convolution</cite></a> on Codeforces, especially section 5 on the fast transforms and the “OR Convolution” subsection.</li>
+    <li id="ref-transforms">Wikipedia. <a href="https://en.wikipedia.org/wiki/Fast_Walsh%E2%80%93Hadamard_transform"><cite>Fast Walsh–Hadamard transform</cite></a>. An introduction to the fast algorithm, its recursive structure, and its addition-and-subtraction steps. For background on the transformation itself, see <a href="https://en.wikipedia.org/wiki/Hadamard_transform"><cite>Hadamard transform</cite></a>.</li>
+    <li id="ref-or-introduction">ko_osaga. <a href="https://codeforces.com/blog/entry/115438"><cite>OR Convolution for Common People</cite></a>. Codeforces. A direct explanation of the multiplication method using sums over subsets, pointwise multiplication, and undoing the sums by subtraction. The subset-sum operation described here is the subset zeta transform, and undoing it is Möbius inversion.</li>
+    <li id="ref-zeta-lecture">Venkatesan Guruswami (lecturer), Sai Sandeep (scribe). <a href="https://www.cs.cmu.edu/afs/cs.cmu.edu/academic/class/15859-f19/www/scribes/lecture10.pdf#page=3"><cite>Coping with Intractability, Lecture 10</cite></a>. Carnegie Mellon University, 7 October 2019. Sections 2.1–2.3, pp. 3–5, define the subset zeta and Möbius transforms, explain the fast Yates algorithm, and derive multiplication by transforming, multiplying corresponding entries, and inverting. The notes call OR convolution the <em>cover product</em>.</li>
+  </ol>
+</section>
     </article>
   </main>
   <footer>
     <div class="wrap">
-      <p>Original AlgebraicBoolean method and back-transformation procedure by Rado. The proof and audit were developed in collaboration with ChatGPT.</p>
+      <p>AlgebraicBoolean · Version 1.01 · 18 November 2026.</p>
+      <p>Original method and back-transformation procedure by Roland Adorni (Rado). Proof by ChatGPT 6.1 Sol High. HTML document written by ChatGPT. <a href="#credits">Contributions and references</a>.</p>
       <p><a href="#article">Back to article</a></p>
     </div>
   </footer>
